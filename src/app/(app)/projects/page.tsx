@@ -5,7 +5,7 @@ import { DatePicker } from "@/components/pickers/DatePicker";
 import { MemberPicker } from "@/components/pickers/MemberPicker";
 import { PriorityPicker } from "@/components/pickers/PriorityPicker";
 import { FilterMenu } from "@/components/tasks/FilterMenu";
-import { SearchBar } from "@/components/tasks/SearchBar";
+import { PageToolbar } from "@/components/tasks/PageToolbar";
 import { AvatarGroup } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import {
@@ -18,7 +18,7 @@ import { PriorityTag } from "@/components/ui/Priority";
 import { useTaskStore } from "@/lib/store";
 import { useUiStore } from "@/lib/ui-store";
 import { cn, formatDate } from "@/lib/utils";
-import { MoreHorizontal, Plus, Search, Trash2 } from "lucide-react";
+import { MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -27,12 +27,6 @@ export default function ProjectsPage() {
   const { projects, updateProject, deleteProject, addProject } = useTaskStore();
   const { priorityFilter } = useUiStore();
   const [query, setQuery] = useState("");
-  const [searching, setSearching] = useState(false);
-
-  const closeSearch = () => {
-    setSearching(false);
-    setQuery("");
-  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -45,42 +39,23 @@ export default function ProjectsPage() {
   return (
     <>
       <Topbar
-        title={searching ? undefined : "Projects"}
         breadcrumb={
-          searching ? (
-            <SearchBar
-              value={query}
-              onChange={setQuery}
-              onClose={closeSearch}
-              placeholder="Search projects..."
-            />
-          ) : undefined
-        }
-        actions={
-          searching ? (
-            <Button variant="ghost" size="sm" onClick={closeSearch}>
-              Cancel
+          <PageToolbar
+            title="Projects"
+            query={query}
+            onQuery={setQuery}
+            placeholder="Search projects..."
+          >
+            <FilterMenu />
+            <Button
+              variant="solid"
+              size="sm"
+              onClick={() => addProject("New Project")}
+            >
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">Add Project</span>
             </Button>
-          ) : (
-            <>
-              <button
-                onClick={() => setSearching(true)}
-                className="grid h-8 w-8 place-items-center rounded-lg border border-border-strong bg-surface text-muted hover:bg-hover focus-accent"
-                aria-label="Search"
-              >
-                <Search className="h-3.5 w-3.5" />
-              </button>
-              <FilterMenu />
-              <Button
-                variant="solid"
-                size="sm"
-                onClick={() => addProject("New Project")}
-              >
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">Add Project</span>
-              </Button>
-            </>
-          )
+          </PageToolbar>
         }
       />
 

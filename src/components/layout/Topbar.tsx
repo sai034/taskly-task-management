@@ -16,7 +16,7 @@ export function Topbar({
   const { toggleCollapsed, setMobileOpen } = useShell();
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border-default bg-surface/80 px-3 backdrop-blur-md sm:px-4">
+    <header className="sticky top-0 z-30 flex min-h-14 items-center gap-2 border-b border-border-default bg-surface/80 px-3 py-2 backdrop-blur-md sm:px-4">
       <button
         onClick={() => setMobileOpen(true)}
         className="grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-hover lg:hidden"
