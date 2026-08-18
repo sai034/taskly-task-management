@@ -1,26 +1,276 @@
 @import "tailwindcss";
 
+/* ------------------------------------------------------------------ */
+/*  Dark mode is class-based (toggled on <html>), not media-based, so  */
+/*  the user's explicit Color Mode choice always wins.                 */
+/* ------------------------------------------------------------------ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ------------------------------------------------------------------ */
+/*  Neutral surface + text palette — LIGHT (default)                   */
+/* ------------------------------------------------------------------ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --app-bg: #f4f4f5;
+  --surface: #ffffff;
+  --surface-2: #fafafa;
+  --sidebar: #fbfbfb;
+  --overlay: rgba(9, 9, 11, 0.45);
+
+  --border: #eaeaec;
+  --border-strong: #dcdce0;
+
+  --text: #18181b;
+  --text-muted: #6b6b73;
+  --text-faint: #9a9aa2;
+
+  --hover: #f4f4f5;
+  --active: #efeff1;
+
+  /* Neutral "black" button (inverts in dark mode) */
+  --solid: #18181b;
+  --solid-hover: #2a2a2e;
+  --solid-fg: #ffffff;
+
+  /* Priority scale (fixed across themes) */
+  --p-urgent: #e5484d;
+  --p-high: #f76b15;
+  --p-medium: #e2a336;
+  --p-low: #8b8b93;
+  --p-none: #c9c9d0;
+
+  /* Status dots */
+  --s-backlog: #e2a336;
+  --s-todo: #8b8b93;
+  --s-progress: #3b82f6;
+  --s-done: #16a34a;
+  --s-cancelled: #b0b0b8;
+
+  color-scheme: light;
 }
 
+.dark {
+  --app-bg: #0b0b0d;
+  --surface: #161618;
+  --surface-2: #1b1b1e;
+  --sidebar: #111113;
+  --overlay: rgba(0, 0, 0, 0.6);
+
+  --border: #262629;
+  --border-strong: #34343a;
+
+  --text: #f4f4f5;
+  --text-muted: #a1a1aa;
+  --text-faint: #71717a;
+
+  --hover: #202023;
+  --active: #29292d;
+
+  --solid: #f4f4f5;
+  --solid-hover: #e4e4e7;
+  --solid-fg: #18181b;
+
+  --p-urgent: #f0595e;
+  --p-high: #ff8438;
+  --p-medium: #f0b44a;
+  --p-low: #9a9aa2;
+  --p-none: #3a3a40;
+
+  --s-backlog: #f0b44a;
+  --s-todo: #9a9aa2;
+  --s-progress: #5b9bff;
+  --s-done: #35c26a;
+  --s-cancelled: #52525b;
+
+  color-scheme: dark;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Accent colors — the "Color Mode" swatches from the design.         */
+/*  Each sets: --accent (solid), --accent-hover, --accent-fg (text on  */
+/*  accent), --accent-soft (tinted bg), --accent-soft-fg (text on it). */
+/*  Default accent = Blue.                                             */
+/* ------------------------------------------------------------------ */
+:root,
+[data-accent="blue"] {
+  --accent: #3b82f6;
+  --accent-hover: #2f6fe0;
+  --accent-fg: #ffffff;
+  --accent-soft: #e8f0fe;
+  --accent-soft-fg: #1d4ed8;
+  --accent-ring: rgba(59, 130, 246, 0.35);
+}
+[data-accent="amber"] {
+  --accent: #f59e0b;
+  --accent-hover: #dd8c07;
+  --accent-fg: #ffffff;
+  --accent-soft: #fdf0d5;
+  --accent-soft-fg: #b45309;
+  --accent-ring: rgba(245, 158, 11, 0.35);
+}
+[data-accent="pink"] {
+  --accent: #ec4899;
+  --accent-hover: #db2f86;
+  --accent-fg: #ffffff;
+  --accent-soft: #fce7f2;
+  --accent-soft-fg: #be2063;
+  --accent-ring: rgba(236, 72, 153, 0.35);
+}
+[data-accent="rose"] {
+  --accent: #f43f5e;
+  --accent-hover: #e02b4c;
+  --accent-fg: #ffffff;
+  --accent-soft: #fde4e8;
+  --accent-soft-fg: #be1236;
+  --accent-ring: rgba(244, 63, 94, 0.35);
+}
+[data-accent="emerald"] {
+  --accent: #10b981;
+  --accent-hover: #0ea271;
+  --accent-fg: #ffffff;
+  --accent-soft: #d6f5e9;
+  --accent-soft-fg: #047857;
+  --accent-ring: rgba(16, 185, 129, 0.35);
+}
+[data-accent="black"] {
+  --accent: #18181b;
+  --accent-hover: #2a2a2e;
+  --accent-fg: #ffffff;
+  --accent-soft: #ececee;
+  --accent-soft-fg: #18181b;
+  --accent-ring: rgba(24, 24, 27, 0.3);
+}
+/* In dark mode a "black" accent would be invisible — flip to near-white */
+.dark [data-accent="black"] {
+  --accent: #e4e4e7;
+  --accent-hover: #d4d4d8;
+  --accent-fg: #18181b;
+  --accent-soft: #29292d;
+  --accent-soft-fg: #f4f4f5;
+  --accent-ring: rgba(228, 228, 231, 0.3);
+}
+.dark [data-accent="blue"] {
+  --accent-soft: #16263f;
+  --accent-soft-fg: #7cb0ff;
+}
+.dark [data-accent="amber"] {
+  --accent-soft: #33260c;
+  --accent-soft-fg: #fbc35a;
+}
+.dark [data-accent="pink"] {
+  --accent-soft: #351427;
+  --accent-soft-fg: #f77fbe;
+}
+.dark [data-accent="rose"] {
+  --accent-soft: #35141d;
+  --accent-soft-fg: #fb7d93;
+}
+.dark [data-accent="emerald"] {
+  --accent-soft: #0e2b21;
+  --accent-soft-fg: #4ddba7;
+}
+
+/* ------------------------------------------------------------------ */
+/*  Map CSS variables to Tailwind theme tokens so utilities like       */
+/*  bg-surface / text-muted / border-default / bg-accent all work.     */
+/* ------------------------------------------------------------------ */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-app: var(--app-bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-sidebar: var(--sidebar);
+
+  --color-border-default: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  --color-text: var(--text);
+  --color-muted: var(--text-muted);
+  --color-faint: var(--text-faint);
+
+  --color-hover: var(--hover);
+  --color-active: var(--active);
+
+  --color-solid: var(--solid);
+  --color-solid-hover: var(--solid-hover);
+  --color-solid-fg: var(--solid-fg);
+
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-soft-fg: var(--accent-soft-fg);
+
+  --color-p-urgent: var(--p-urgent);
+  --color-p-high: var(--p-high);
+  --color-p-medium: var(--p-medium);
+  --color-p-low: var(--p-low);
+  --color-p-none: var(--p-none);
+
+  --color-s-backlog: var(--s-backlog);
+  --color-s-todo: var(--s-todo);
+  --color-s-progress: var(--s-progress);
+  --color-s-done: var(--s-done);
+  --color-s-cancelled: var(--s-cancelled);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-xl: 14px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ------------------------------------------------------------------ */
+/*  Base                                                               */
+/* ------------------------------------------------------------------ */
+* {
+  border-color: var(--border);
+}
+
+html,
+body {
+  height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--app-bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
+
+::selection {
+  background: var(--accent-soft);
+  color: var(--accent-soft-fg);
+}
+
+/* Thin, unobtrusive scrollbars */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Focus ring using the active accent */
+.focus-accent:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--accent-ring);
+}
+
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes content-in {
+  from { opacity: 0; transform: translateY(4px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-overlay { animation: overlay-in 0.15s ease-out; }
+.animate-content { animation: content-in 0.14s cubic-bezier(0.16, 1, 0.3, 1); }
