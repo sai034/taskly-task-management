@@ -302,11 +302,21 @@ body {
   animation: drawer-out 0.24s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
+/* Staggered nav-item entrance (plays each time the drawer mounts) */
+@keyframes nav-item-in {
+  from { opacity: 0; transform: translateX(-8px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.nav-item {
+  animation: nav-item-in 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .drawer-panel[data-state="open"],
   .drawer-panel[data-state="closed"],
   .drawer-overlay[data-state="open"],
-  .drawer-overlay[data-state="closed"] {
+  .drawer-overlay[data-state="closed"],
+  .nav-item {
     animation-duration: 0.01ms;
   }
 }
