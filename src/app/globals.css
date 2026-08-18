@@ -139,8 +139,10 @@
   --accent-soft-fg: #18181b;
   --accent-ring: rgba(24, 24, 27, 0.3);
 }
-/* In dark mode a "black" accent would be invisible — flip to near-white */
-.dark [data-accent="black"] {
+/* In dark mode a "black" accent would be invisible — flip to near-white.
+   NB: .dark and data-accent live on the same <html> element, so these must
+   be compound selectors (no descendant combinator). */
+.dark[data-accent="black"] {
   --accent: #e4e4e7;
   --accent-hover: #d4d4d8;
   --accent-fg: #18181b;
@@ -148,23 +150,23 @@
   --accent-soft-fg: #f4f4f5;
   --accent-ring: rgba(228, 228, 231, 0.3);
 }
-.dark [data-accent="blue"] {
+.dark[data-accent="blue"] {
   --accent-soft: #16263f;
   --accent-soft-fg: #7cb0ff;
 }
-.dark [data-accent="amber"] {
+.dark[data-accent="amber"] {
   --accent-soft: #33260c;
   --accent-soft-fg: #fbc35a;
 }
-.dark [data-accent="pink"] {
+.dark[data-accent="pink"] {
   --accent-soft: #351427;
   --accent-soft-fg: #f77fbe;
 }
-.dark [data-accent="rose"] {
+.dark[data-accent="rose"] {
   --accent-soft: #35141d;
   --accent-soft-fg: #fb7d93;
 }
-.dark [data-accent="emerald"] {
+.dark[data-accent="emerald"] {
   --accent-soft: #0e2b21;
   --accent-soft-fg: #4ddba7;
 }
