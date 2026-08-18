@@ -1,9 +1,11 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import * as Dialog from "@radix-ui/react-dialog";
 import { FolderKanban, LayoutGrid, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useEffect } from "react";
 import { useShell } from "./ShellContext";
 import { WorkspaceMenu } from "./WorkspaceMenu";
 
@@ -12,9 +14,8 @@ const NAV = [
   { href: "/projects", label: "Projects", icon: FolderKanban },
 ];
 
-function SidebarInner() {
+function SidebarInner({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
-  const { setMobileOpen } = useShell();
 
   return (
     <div className="flex h-full flex-col bg-sidebar">
@@ -22,13 +23,15 @@ function SidebarInner() {
         <div className="min-w-0 flex-1">
           <WorkspaceMenu />
         </div>
-        <button
-          onClick={() => setMobileOpen(false)}
-          className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted hover:bg-hover lg:hidden"
-          aria-label="Close menu"
-        >
-          <X className="h-4 w-4" />
-        </button>
+        {onNavigate && (
+          <button
+            onClick={onNavigate}
+            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted hover:bg-hover lg:hidden"
+            aria-label="Close menu"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
       <nav className="flex-1 space-y-0.5 px-2.5">
@@ -41,17 +44,15 @@ function SidebarInner() {
             <Link
               key={item.href}
               href={item.href}
-              onClick={() => setMobileOpen(false)}
+              onClick={onNavigate}
               className={cn(
-                "flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-[13px] font-medium transition-colors",
+                "flex items-center gap-2.5 rounded-lg px-2 py-2 text-[13px] font-medium transition-colors",
                 active
                   ? "bg-active text-text"
                   : "text-muted hover:bg-hover hover:text-text",
               )}
             >
-              <item.icon
-                className={cn("h-4 w-4", active && "text-accent")}
-              />
+              <item.icon className={cn("h-4 w-4", active && "text-accent")} />
               {item.label}
             </Link>
           );
@@ -67,10 +68,16 @@ function SidebarInner() {
 
 export function Sidebar() {
   const { collapsed, mobileOpen, setMobileOpen } = useShell();
+  const pathname = usePathname();
+
+  // Close the drawer whenever the route changes (e.g. via the workspace menu).
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname, setMobileOpen]);
 
   return (
     <>
-      {/* Desktop */}
+      {/* Desktop — persistent, collapsible */}
       <aside
         className={cn(
           "hidden shrink-0 border-r border-border-default transition-[width] duration-200 lg:block",
@@ -80,18 +87,19 @@ export function Sidebar() {
         <SidebarInner />
       </aside>
 
-      {/* Mobile drawer */}
-      {mobileOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div
-            className="absolute inset-0 bg-[var(--overlay)] animate-overlay"
-            onClick={() => setMobileOpen(false)}
-          />
-          <div className="absolute left-0 top-0 h-full w-[260px] border-r border-border-default shadow-xl animate-content">
-            <SidebarInner />
-          </div>
-        </div>
-      )}
+      {/* Mobile — modal drawer (focus-trapped, scroll-locked, animated) */}
+      <Dialog.Root open={mobileOpen} onOpenChange={setMobileOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="drawer-overlay fixed inset-0 z-50 bg-[var(--overlay)] backdrop-blur-[2px] lg:hidden" />
+          <Dialog.Content
+            className="drawer-panel fixed inset-y-0 left-0 z-50 w-[82vw] max-w-[300px] border-r border-border-default bg-sidebar shadow-2xl outline-none lg:hidden"
+            aria-describedby={undefined}
+          >
+            <Dialog.Title className="sr-only">Navigation menu</Dialog.Title>
+            <SidebarInner onNavigate={() => setMobileOpen(false)} />
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </>
   );
 }

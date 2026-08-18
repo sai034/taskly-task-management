@@ -276,3 +276,37 @@ body {
 }
 .animate-overlay { animation: overlay-in 0.15s ease-out; }
 .animate-content { animation: content-in 0.14s cubic-bezier(0.16, 1, 0.3, 1); }
+
+/* ---- Mobile navigation drawer (slide in + out) ---- */
+@keyframes drawer-in {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0); }
+}
+@keyframes drawer-out {
+  from { transform: translateX(0); }
+  to { transform: translateX(-100%); }
+}
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fade-out { from { opacity: 1; } to { opacity: 0; } }
+
+.drawer-overlay[data-state="open"] {
+  animation: fade-in 0.25s ease-out;
+}
+.drawer-overlay[data-state="closed"] {
+  animation: fade-out 0.2s ease-in;
+}
+.drawer-panel[data-state="open"] {
+  animation: drawer-in 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.drawer-panel[data-state="closed"] {
+  animation: drawer-out 0.24s cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .drawer-panel[data-state="open"],
+  .drawer-panel[data-state="closed"],
+  .drawer-overlay[data-state="open"],
+  .drawer-overlay[data-state="closed"] {
+    animation-duration: 0.01ms;
+  }
+}
