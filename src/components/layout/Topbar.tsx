@@ -19,10 +19,10 @@ export function Topbar({
     <header className="sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border-default bg-surface/80 px-3 backdrop-blur-md sm:px-4">
       <button
         onClick={() => setMobileOpen(true)}
-        className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-border-default bg-surface-2 text-muted transition-all hover:bg-hover hover:text-text active:scale-95 lg:hidden"
+        className="grid h-8 w-8 place-items-center rounded-lg text-muted hover:bg-hover lg:hidden"
         aria-label="Open menu"
       >
-        <MenuIcon className="h-5 w-5" />
+        <MenuIcon className="h-4.5 w-4.5" />
       </button>
       <button
         onClick={toggleCollapsed}
