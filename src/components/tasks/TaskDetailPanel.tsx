@@ -33,7 +33,7 @@ export function TaskDetailPanel({ task }: { task: Task }) {
   const reporter = getMember(task.reporterId);
 
   return (
-    <div className="rounded-xl border border-border-default bg-surface p-3">
+    <div className="rounded-xl border border-border-default bg-surface-2 p-3">
       <div className="mb-1 flex items-center justify-between px-1">
         <span className="text-[13px] font-semibold">Details</span>
         <div className="flex items-center gap-0.5 text-faint">
@@ -131,7 +131,7 @@ export function TaskDetailPanel({ task }: { task: Task }) {
       </Row>
 
       {task.dueDate && (
-        <div className="mt-3 flex items-center gap-1.5 rounded-lg bg-surface-2 px-2.5 py-2 text-[12px] text-muted">
+        <div className="mt-3 flex items-center gap-1.5 rounded-lg border border-border-default bg-surface px-2.5 py-2 text-[12px] text-muted">
           <CalendarDays className="h-3.5 w-3.5" />
           Due {formatDate(task.dueDate)}
         </div>

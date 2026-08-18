@@ -108,7 +108,7 @@ export default function TaskDetailPage() {
         }
       />
 
-      <div className="min-h-0 flex-1 overflow-y-auto">
+      <div className="min-h-0 flex-1 overflow-y-auto bg-surface">
         <div className="mx-auto max-w-5xl px-4 py-5 sm:px-6 sm:py-6">
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_308px]">
             {/* Main */}
