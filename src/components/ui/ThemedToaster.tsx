@@ -9,7 +9,7 @@ export function ThemedToaster() {
   return (
     <Toaster
       theme={mode}
-      position="bottom-right"
+      position="top-right"
       richColors
       closeButton
       toastOptions={{

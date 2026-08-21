@@ -36,7 +36,7 @@ function Column({
   const { setNodeRef, isOver } = useDroppable({ id: `col-${group}` });
 
   return (
-    <div className="flex w-[280px] shrink-0 flex-col sm:w-[300px]">
+    <div className="flex min-w-[280px] flex-1 flex-col sm:min-w-[288px]">
       <div className="mb-2 flex items-center gap-2 px-1">
         <span
           className="h-2.5 w-2.5 rounded-[3px]"

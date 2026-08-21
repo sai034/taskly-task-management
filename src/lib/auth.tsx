@@ -8,6 +8,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import { toast } from "sonner";
 import { api } from "./api";
 import { CURRENT_USER } from "./seed";
 
@@ -73,6 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Backend unreachable — fall back to a local guest session.
       persist(GUEST_USER);
     }
+    toast.success("Signed in as guest");
     router.push("/tasks");
   }, [persist, router]);
 
@@ -85,6 +87,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch {
       persist({ ...GUEST_USER, guest: false });
     }
+    toast.success("Welcome to Taskly");
     router.push("/tasks");
   }, [persist, router]);
 
@@ -103,6 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
     persist(null);
+    toast.success("Signed out");
     router.push("/login");
   }, [persist, router]);
 

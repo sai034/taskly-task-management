@@ -326,3 +326,10 @@ button:disabled,
     animation-duration: 0.01ms;
   }
 }
+
+/* Sonner: move the toast close (✕) button to the top-right corner. */
+[data-sonner-toast] [data-close-button] {
+  left: auto !important;
+  right: 0 !important;
+  transform: translate(35%, -35%) !important;
+}
