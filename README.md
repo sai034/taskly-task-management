@@ -38,9 +38,8 @@ The frontend lives at the repo root; the backend is a self-contained app in `bac
 | Drag & drop | dnd-kit (Kanban)                           | —                                    |
 | Icons       | lucide-react                               | —                                    |
 
-> **Database choice.** SQLite is used for zero-setup local development (allowed by the brief).
-> The schema is written to switch to PostgreSQL for production by changing one line — see
-> [Deployment](#deployment).
+> **Database choice.** SQLite is used for zero-setup local development. The schema switches to
+> PostgreSQL for production by changing one line — see [Deployment](#deployment).
 
 ---
 

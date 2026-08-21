@@ -44,8 +44,8 @@ export function LegalShell({
         <div className="mt-8 space-y-8">{children}</div>
 
         <div className="mt-12 rounded-xl border border-border-default bg-surface-2 px-4 py-3 text-[12px] leading-relaxed text-faint">
-          Taskly is a portfolio/assessment demo application. This document is a plain-language
-          template provided for completeness and is not legal advice.
+          Taskly is a demo application. This document is a plain-language template provided for
+          completeness and is not legal advice.
         </div>
       </main>
     </div>

@@ -87,9 +87,7 @@ export function Sidebar() {
         <SidebarInner />
       </aside>
 
-      {/* Mobile — modal drawer (focus-trapped, scroll-locked, animated).
-          Visual design is the original Taskly sidebar; only the open/close
-          behavior was made user-friendly (per the EasyMessage reference). */}
+      {/* Mobile — modal drawer (focus-trapped, scroll-locked, animated). */}
       <Dialog.Root open={mobileOpen} onOpenChange={setMobileOpen}>
         <Dialog.Portal>
           <Dialog.Overlay className="drawer-overlay fixed inset-0 z-50 bg-[var(--overlay)] backdrop-blur-[2px] lg:hidden" />

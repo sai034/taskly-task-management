@@ -1,98 +1,92 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Taskly API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+The backend for Taskly — a REST API built with **NestJS**, **Prisma**, and **SQLite** (for
+zero-setup local development; the schema switches to PostgreSQL for production).
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+## Requirements
 
-## Description
+- Node.js 18+
+- npm
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
-
-## Project setup
+## Setup
 
 ```bash
-$ npm install
+npm install
+npx prisma migrate dev      # create the SQLite database and tables
+npm run db:seed             # seed members, projects, and tasks
+npm run start:dev           # start the API on http://localhost:4000/api
 ```
 
-## Compile and run the project
+## Environment
 
-```bash
-# development
-$ npm run start
+Copy `.env.example` to `.env` and adjust as needed:
 
-# watch mode
-$ npm run start:dev
+| Variable        | Description                                       | Default                     |
+| --------------- | ------------------------------------------------- | --------------------------- |
+| `DATABASE_URL`  | Prisma connection string                          | `file:./dev.db`             |
+| `PORT`          | Port the API listens on                           | `4000`                      |
+| `CORS_ORIGINS`  | Comma-separated list of allowed frontend origins  | `http://localhost:3000`     |
 
-# production mode
-$ npm run start:prod
+## Project structure
+
+```
+src/
+├─ main.ts            # bootstrap: global prefix, CORS, validation pipe
+├─ app.module.ts      # root module
+├─ app.controller.ts  # health check (GET /api)
+├─ prisma/            # PrismaService + module
+├─ common/            # shared constants (enum values, helpers)
+├─ auth/              # guest / google login
+├─ members/           # members (read-only)
+├─ projects/          # projects CRUD
+└─ tasks/             # tasks CRUD + subtasks, comments, activity
+prisma/
+├─ schema.prisma      # data model
+├─ migrations/        # generated migrations
+└─ seed.ts            # seed data
 ```
 
-## Run tests
+## API
 
-```bash
-# unit tests
-$ npm run test
+Base URL: `/api`. Requests are validated with DTOs and a global `ValidationPipe`
+(`whitelist` + `forbidNonWhitelisted`): unknown or invalid fields return `400`, and missing
+resources return `404`.
 
-# e2e tests
-$ npm run test:e2e
+| Method   | Endpoint                             | Description                     |
+| -------- | ------------------------------------ | ------------------------------- |
+| `GET`    | `/api`                               | Health check                    |
+| `POST`   | `/api/auth/guest`                    | Guest login                     |
+| `POST`   | `/api/auth/google`                   | Mock OAuth login                |
+| `GET`    | `/api/members`                       | List members                    |
+| `GET`    | `/api/tasks`                         | List tasks (with relations)     |
+| `GET`    | `/api/tasks/:id`                     | Get one task                    |
+| `POST`   | `/api/tasks`                         | Create task                     |
+| `PATCH`  | `/api/tasks/:id`                     | Update task                     |
+| `DELETE` | `/api/tasks/:id`                     | Delete task                     |
+| `POST`   | `/api/tasks/:id/subtasks`            | Add subtask                     |
+| `PATCH`  | `/api/tasks/:id/subtasks/:subtaskId` | Update subtask                  |
+| `DELETE` | `/api/tasks/:id/subtasks/:subtaskId` | Delete subtask                  |
+| `POST`   | `/api/tasks/:id/comments`            | Add comment                     |
+| `POST`   | `/api/tasks/:id/activity`            | Log an activity entry           |
+| `GET`    | `/api/projects`                      | List projects                   |
+| `POST`   | `/api/projects`                      | Create project                  |
+| `PATCH`  | `/api/projects/:id`                  | Update project                  |
+| `DELETE` | `/api/projects/:id`                  | Delete project                  |
 
-# test coverage
-$ npm run test:cov
-```
+## Scripts
 
-## Deployment
+| Command               | Description                                  |
+| --------------------- | -------------------------------------------- |
+| `npm run start:dev`   | Start in watch mode                          |
+| `npm run build`       | Compile to `dist/`                           |
+| `npm run start:prod`  | Run the compiled build                       |
+| `npm run db:seed`     | Seed the database                            |
+| `npm run db:reset`    | Reset the database and re-run migrations     |
+| `npm test`            | Run unit tests                               |
+| `npm run test:e2e`    | Run end-to-end tests                         |
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+## Production database (PostgreSQL)
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+1. In `prisma/schema.prisma`, set `datasource db { provider = "postgresql" }`.
+2. Set `DATABASE_URL` to your PostgreSQL connection string and `CORS_ORIGINS` to the frontend URL.
+3. Run `npx prisma migrate deploy && npm run db:seed && npm run start:prod`.
