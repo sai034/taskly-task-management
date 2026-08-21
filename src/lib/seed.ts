@@ -1,4 +1,4 @@
-import type { Member, Project, Task } from "./types";
+import type { Activity, Member, Project, Task, TeamKey } from "./types";
 
 export const CURRENT_USER: Member = {
   id: "u-dexter",
@@ -22,7 +22,7 @@ const iso = (d: string) => new Date(d).toISOString();
 let seq = 0;
 const next = () => seq++;
 
-export const SEED_TASKS: Task[] = [
+const RAW_TASKS: Omit<Task, "teams" | "activity">[] = [
   {
     id: "t-api-docs",
     title: "Write API Documentation",
@@ -229,6 +229,37 @@ export const SEED_TASKS: Task[] = [
     comments: [],
   },
 ];
+
+/** Per-task Teams + Updates seed. Tasks not listed default to empty. */
+const TASK_EXTRAS: Record<string, { teams: TeamKey[]; activity: Activity[] }> = {
+  "t-api-docs": {
+    teams: ["engineering", "design"],
+    activity: [
+      {
+        id: "a-1",
+        authorId: "u-dexter",
+        createdAt: iso("2026-08-02"),
+        kind: "change",
+        field: "priority",
+        from: "No Priority",
+        to: "Urgent",
+      },
+      {
+        id: "a-2",
+        authorId: "u-dexter",
+        createdAt: iso("2026-08-01"),
+        kind: "post",
+        note: "posted an update",
+      },
+    ],
+  },
+};
+
+export const SEED_TASKS: Task[] = RAW_TASKS.map((t) => ({
+  ...t,
+  teams: TASK_EXTRAS[t.id]?.teams ?? [],
+  activity: TASK_EXTRAS[t.id]?.activity ?? [],
+}));
 
 export const SEED_PROJECTS: Project[] = [
   { id: "p-home", name: "Design Homepage", priority: "high", leadId: "u-dexter", dueDate: iso("2026-09-12"), order: 0 },

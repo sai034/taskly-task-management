@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { SEED_PROJECTS, SEED_TASKS } from "./seed";
 import type {
+  Activity,
   Comment,
   GroupKey,
   Priority,
@@ -27,6 +28,10 @@ interface TaskState {
   deleteSubtask: (taskId: string, subtaskId: string) => void;
 
   addComment: (taskId: string, authorId: string, body: string) => void;
+  logActivity: (
+    taskId: string,
+    entry: Omit<Activity, "id" | "createdAt">,
+  ) => void;
 
   addProject: (name: string) => void;
   updateProject: (id: string, patch: Partial<Project>) => void;
@@ -58,8 +63,10 @@ export const useTaskStore = create<TaskState>()(
           reporterId: partial?.reporterId ?? "u-dexter",
           dueDate: partial?.dueDate ?? null,
           startDate: partial?.startDate ?? null,
+          teams: partial?.teams ?? [],
           subtasks: [],
           comments: [],
+          activity: [],
           projectId: partial?.projectId ?? null,
           order: maxOrder + 1,
           createdAt: new Date().toISOString(),
@@ -156,6 +163,25 @@ export const useTaskStore = create<TaskState>()(
           ),
         })),
 
+      logActivity: (taskId, entry) =>
+        set((s) => ({
+          tasks: s.tasks.map((t) =>
+            t.id === taskId
+              ? {
+                  ...t,
+                  activity: [
+                    {
+                      id: uid("a"),
+                      createdAt: new Date().toISOString(),
+                      ...entry,
+                    } satisfies Activity,
+                    ...t.activity,
+                  ],
+                }
+              : t,
+          ),
+        })),
+
       addProject: (name) =>
         set((s) => ({
           projects: [
@@ -181,7 +207,7 @@ export const useTaskStore = create<TaskState>()(
 
       reset: () => set({ tasks: SEED_TASKS, projects: SEED_PROJECTS }),
     }),
-    { name: "tm-data-v1" },
+    { name: "tm-data-v2" },
   ),
 );
 

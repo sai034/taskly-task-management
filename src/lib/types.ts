@@ -41,6 +41,21 @@ export interface Subtask {
   done: boolean;
 }
 
+export type TeamKey = "engineering" | "design" | "product" | "marketing" | "qa";
+
+/** An entry in a task's "Updates" activity feed. */
+export interface Activity {
+  id: string;
+  authorId: string;
+  createdAt: string; // ISO
+  /** "change" = a field was edited; "post" = a free-text update. */
+  kind: "change" | "post";
+  field?: string; // e.g. "priority", "status"
+  from?: string;
+  to?: string;
+  note?: string; // for kind === "post"
+}
+
 export interface Task {
   id: string;
   title: string;
@@ -49,12 +64,14 @@ export interface Task {
   status: Status;
   priority: Priority;
   labels: LabelKey[];
+  teams: TeamKey[];
   memberIds: string[];
   reporterId: string | null;
   dueDate: string | null; // ISO
   startDate: string | null; // ISO
   subtasks: Subtask[];
   comments: Comment[];
+  activity: Activity[];
   projectId: string | null;
   order: number;
   createdAt: string;
@@ -109,6 +126,14 @@ export const LABELS: { key: LabelKey; label: string }[] = [
   { key: "deployment", label: "Deployment" },
 ];
 
+export const TEAMS: { key: TeamKey; label: string; color: string }[] = [
+  { key: "engineering", label: "Engineering", color: "#3b82f6" },
+  { key: "design", label: "Design", color: "#ec4899" },
+  { key: "product", label: "Product", color: "#8b5cf6" },
+  { key: "marketing", label: "Marketing", color: "#f59e0b" },
+  { key: "qa", label: "QA", color: "#10b981" },
+];
+
 export function priorityMeta(p: Priority) {
   return PRIORITIES.find((x) => x.key === p)!;
 }
@@ -120,4 +145,7 @@ export function groupMeta(g: GroupKey) {
 }
 export function labelMeta(l: LabelKey) {
   return LABELS.find((x) => x.key === l)!;
+}
+export function teamMeta(t: TeamKey) {
+  return TEAMS.find((x) => x.key === t)!;
 }

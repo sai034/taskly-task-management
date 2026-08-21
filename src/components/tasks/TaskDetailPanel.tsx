@@ -5,13 +5,15 @@ import { LabelPicker } from "@/components/pickers/LabelPicker";
 import { MemberPicker } from "@/components/pickers/MemberPicker";
 import { PriorityPicker } from "@/components/pickers/PriorityPicker";
 import { StatusPicker } from "@/components/pickers/StatusPicker";
+import { TeamPicker, TeamPill } from "@/components/pickers/TeamPicker";
 import { Avatar, AvatarGroup } from "@/components/ui/Avatar";
 import { PriorityTag } from "@/components/ui/Priority";
 import { LabelPill, StatusDot } from "@/components/ui/Tags";
+import { CURRENT_USER } from "@/lib/seed";
 import { useTaskStore } from "@/lib/store";
-import type { Task } from "@/lib/types";
+import { priorityMeta, statusMeta, type Priority, type Status, type Task } from "@/lib/types";
 import { formatDate, getMember } from "@/lib/utils";
-import { CalendarDays, Plus, Settings2, Tag, Users } from "lucide-react";
+import { CalendarDays, Plus, Settings2, Tag, Users, UsersRound } from "lucide-react";
 
 function Row({
   label,
@@ -29,8 +31,32 @@ function Row({
 }
 
 export function TaskDetailPanel({ task }: { task: Task }) {
-  const { updateTask } = useTaskStore();
+  const { updateTask, logActivity } = useTaskStore();
   const reporter = getMember(task.reporterId);
+
+  const changePriority = (p: Priority) => {
+    if (p === task.priority) return;
+    updateTask(task.id, { priority: p });
+    logActivity(task.id, {
+      authorId: CURRENT_USER.id,
+      kind: "change",
+      field: "priority",
+      from: priorityMeta(task.priority).label,
+      to: priorityMeta(p).label,
+    });
+  };
+
+  const changeStatus = (s: Status) => {
+    if (s === task.status) return;
+    updateTask(task.id, { status: s });
+    logActivity(task.id, {
+      authorId: CURRENT_USER.id,
+      kind: "change",
+      field: "status",
+      from: statusMeta(task.status).label,
+      to: statusMeta(s).label,
+    });
+  };
 
   return (
     <div className="rounded-xl border border-border-default bg-surface-2 p-3">
@@ -47,10 +73,7 @@ export function TaskDetailPanel({ task }: { task: Task }) {
       </div>
 
       <Row label="Status">
-        <StatusPicker
-          value={task.status}
-          onChange={(s) => updateTask(task.id, { status: s })}
-        >
+        <StatusPicker value={task.status} onChange={changeStatus}>
           <button className="inline-flex items-center rounded-md px-1.5 py-1 hover:bg-hover">
             <StatusDot status={task.status} />
           </button>
@@ -58,10 +81,7 @@ export function TaskDetailPanel({ task }: { task: Task }) {
       </Row>
 
       <Row label="Priority">
-        <PriorityPicker
-          value={task.priority}
-          onChange={(p) => updateTask(task.id, { priority: p })}
-        >
+        <PriorityPicker value={task.priority} onChange={changePriority}>
           <button className="inline-flex items-center rounded-md px-1.5 py-1 hover:bg-hover">
             <PriorityTag priority={task.priority} />
           </button>
@@ -117,6 +137,23 @@ export function TaskDetailPanel({ task }: { task: Task }) {
             )}
           </button>
         </LabelPicker>
+      </Row>
+
+      <Row label="Teams">
+        <TeamPicker
+          value={task.teams}
+          onChange={(t) => updateTask(task.id, { teams: t })}
+        >
+          <button className="flex flex-wrap items-center gap-1 rounded-md px-1.5 py-1 text-left hover:bg-hover">
+            {task.teams.length ? (
+              task.teams.map((t) => <TeamPill key={t} team={t} />)
+            ) : (
+              <span className="inline-flex items-center gap-1.5 text-[13px] text-faint">
+                <UsersRound className="h-3.5 w-3.5" /> Add teams
+              </span>
+            )}
+          </button>
+        </TeamPicker>
       </Row>
 
       <Row label="Reporter">

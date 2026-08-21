@@ -4,6 +4,7 @@ import { Topbar } from "@/components/layout/Topbar";
 import { Comments } from "@/components/tasks/Comments";
 import { SubtaskTable } from "@/components/tasks/SubtaskTable";
 import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
+import { UpdatesFeed } from "@/components/tasks/UpdatesFeed";
 import { LabelPicker } from "@/components/pickers/LabelPicker";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -180,10 +181,11 @@ export default function TaskDetailPage() {
               </div>
             </div>
 
-            {/* Details panel */}
+            {/* Details panel + Updates feed */}
             <div className="order-1 lg:order-2">
               <div className="lg:sticky lg:top-4">
                 <TaskDetailPanel task={task} />
+                <UpdatesFeed task={task} />
               </div>
             </div>
           </div>
