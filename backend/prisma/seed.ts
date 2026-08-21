@@ -101,6 +101,15 @@ const TASKS: TaskSeed[] = [
 ];
 
 async function main() {
+  // Idempotent: skip if the database is already seeded so this can run safely
+  // on every deploy/boot without wiping existing data. Use `npm run db:reset`
+  // to force a clean re-seed.
+  const existing = await prisma.member.count();
+  if (existing > 0) {
+    console.log('Database already seeded — skipping.');
+    return;
+  }
+
   // Reset (order matters for FKs; cascade handles children).
   await prisma.activity.deleteMany();
   await prisma.comment.deleteMany();
