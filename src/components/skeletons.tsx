@@ -2,9 +2,9 @@ import { Skeleton } from "@/components/ui/Skeleton";
 
 export function BoardSkeleton() {
   return (
-    <div className="flex h-full gap-4 overflow-hidden px-3 pb-4 pt-3 sm:px-4">
+    <div className="grid grid-cols-1 items-start gap-4 px-3 pb-6 pt-3 sm:px-4 md:grid-cols-2 xl:grid-cols-4">
       {Array.from({ length: 4 }).map((_, c) => (
-        <div key={c} className="flex w-[280px] shrink-0 flex-col sm:w-[300px]">
+        <div key={c} className="flex min-w-0 flex-col">
           <div className="mb-2 flex items-center gap-2 px-1">
             <Skeleton className="h-2.5 w-2.5" />
             <Skeleton className="h-4 w-24" />

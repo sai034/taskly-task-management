@@ -36,7 +36,7 @@ function Column({
   const { setNodeRef, isOver } = useDroppable({ id: `col-${group}` });
 
   return (
-    <div className="flex min-w-[280px] flex-1 flex-col sm:min-w-[288px]">
+    <div className="flex min-w-0 flex-col">
       <div className="mb-2 flex items-center gap-2 px-1">
         <span
           className="h-2.5 w-2.5 rounded-[3px]"
@@ -145,7 +145,9 @@ export function BoardView({ tasks }: { tasks: Task[] }) {
       onDragOver={onDragOver}
       onDragEnd={onDragEnd}
     >
-      <div className="flex h-full gap-4 overflow-x-auto px-3 pb-4 pt-3 sm:px-4">
+      {/* Responsive board: 1 column on phones, 2 on tablets, 4 on desktop —
+          no horizontal scrolling. */}
+      <div className="grid grid-cols-1 items-start gap-4 px-3 pb-6 pt-3 sm:px-4 md:grid-cols-2 xl:grid-cols-4">
         {GROUPS.map((g) => (
           <Column
             key={g.key}
