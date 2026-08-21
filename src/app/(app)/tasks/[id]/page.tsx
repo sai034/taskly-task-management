@@ -19,6 +19,7 @@ import {
 import { useTaskStore } from "@/lib/store";
 import { getMember } from "@/lib/utils";
 import {
+  Check,
   Eye,
   Link2,
   Lock,
@@ -31,7 +32,6 @@ import {
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { toast } from "sonner";
 
 export default function TaskDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -42,29 +42,53 @@ export default function TaskDetailPage() {
 
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
+  const [dirty, setDirty] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">(
+    "idle",
+  );
 
+  // Load the fields when the task changes; reset the edit/save state.
   useEffect(() => {
     if (task) {
       setTitle(task.title);
       setDesc(task.description);
+      setDirty(false);
+      setSaveStatus("idle");
     }
   }, [task?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const saveTitle = () => {
+  // Auto-save shortly after the user stops typing (only once they've edited).
+  useEffect(() => {
+    if (!task || !dirty) return;
+    const nextTitle = title.trim() || "Untitled Task";
+    const titleChanged = nextTitle !== task.title;
+    const descChanged = desc !== task.description;
+    if (!titleChanged && !descChanged) return;
+    setSaveStatus("saving");
+    const h = setTimeout(() => {
+      if (titleChanged) updateTask(task.id, { title: nextTitle });
+      if (descChanged) updateTask(task.id, { description: desc });
+      setSaveStatus("saved");
+    }, 650);
+    return () => clearTimeout(h);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [title, desc, dirty, task?.id, task?.title, task?.description]);
+
+  // Save immediately on blur too, so nothing is lost on a quick navigation.
+  const flushTitle = () => {
     if (!task) return;
     const next = title.trim() || "Untitled Task";
     if (next !== title) setTitle(next);
     if (next !== task.title) {
       updateTask(task.id, { title: next });
-      toast.success("Changes saved");
+      setSaveStatus("saved");
     }
   };
-
-  const saveDesc = () => {
+  const flushDesc = () => {
     if (!task) return;
     if (desc !== task.description) {
       updateTask(task.id, { description: desc });
-      toast.success("Changes saved");
+      setSaveStatus("saved");
     }
   };
 
@@ -147,31 +171,54 @@ export default function TaskDetailPage() {
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_308px]">
             {/* Main */}
             <div className="order-2 min-w-0 lg:order-1">
-              {/* Editable title — hover highlight + pencil signal it's editable */}
-              <div className="group relative -mx-2.5">
+              {/* Editable title — pencil always shown; field look only on hover */}
+              <div className="relative -mx-2.5">
                 <input
                   value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  onBlur={saveTitle}
-                  className="w-full rounded-lg bg-transparent px-2.5 py-1.5 pr-9 text-2xl font-semibold tracking-tight outline-none transition-colors hover:bg-hover focus:bg-surface-2 focus:ring-2 focus:ring-[var(--accent-ring)]"
+                  onChange={(e) => {
+                    setTitle(e.target.value);
+                    setDirty(true);
+                  }}
+                  onBlur={flushTitle}
+                  className="w-full rounded-lg bg-transparent px-2.5 py-1.5 pr-9 text-2xl font-semibold tracking-tight outline-none transition-colors hover:bg-hover focus:bg-hover focus:ring-2 focus:ring-[var(--accent-ring)]"
                   placeholder="Task title"
-                  aria-label="Task title (click to edit)"
+                  aria-label="Task title (editable)"
                 />
-                <Pencil className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-0" />
+                <Pencil className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
               </div>
 
               {/* Editable description */}
-              <div className="group relative -mx-2.5 mt-1">
+              <div className="relative -mx-2.5 mt-1">
                 <textarea
                   value={desc}
-                  onChange={(e) => setDesc(e.target.value)}
-                  onBlur={saveDesc}
+                  onChange={(e) => {
+                    setDesc(e.target.value);
+                    setDirty(true);
+                  }}
+                  onBlur={flushDesc}
                   rows={2}
                   placeholder="Add a description…"
-                  aria-label="Task description (click to edit)"
-                  className="w-full resize-none rounded-lg bg-transparent px-2.5 py-1.5 pr-9 text-[14px] leading-relaxed text-muted outline-none transition-colors placeholder:text-faint hover:bg-hover focus:bg-surface-2 focus:text-text focus:ring-2 focus:ring-[var(--accent-ring)]"
+                  aria-label="Task description (editable)"
+                  className="w-full resize-none rounded-lg bg-transparent px-2.5 py-1.5 pr-9 text-[14px] leading-relaxed text-muted outline-none transition-colors placeholder:text-faint hover:bg-hover focus:bg-hover focus:text-text focus:ring-2 focus:ring-[var(--accent-ring)]"
                 />
-                <Pencil className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-faint opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-0" />
+                <Pencil className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-faint" />
+              </div>
+
+              {/* Auto-save status — tells the user edits save automatically */}
+              <div className="mt-1 flex h-4 items-center gap-1 px-0.5 text-[11px] text-faint">
+                {saveStatus === "saving" ? (
+                  <>
+                    <span className="h-2.5 w-2.5 animate-spin rounded-full border-[1.5px] border-border-strong border-t-accent" />
+                    Saving…
+                  </>
+                ) : saveStatus === "saved" ? (
+                  <>
+                    <Check className="h-3 w-3 text-s-done" />
+                    Saved
+                  </>
+                ) : (
+                  <>Changes save automatically</>
+                )}
               </div>
 
               {/* Properties */}
