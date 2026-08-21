@@ -23,6 +23,7 @@ import {
   Link2,
   Lock,
   MoreHorizontal,
+  Pencil,
   Plus,
   Tag,
   Trash2,
@@ -30,6 +31,7 @@ import {
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export default function TaskDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -47,6 +49,24 @@ export default function TaskDetailPage() {
       setDesc(task.description);
     }
   }, [task?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const saveTitle = () => {
+    if (!task) return;
+    const next = title.trim() || "Untitled Task";
+    if (next !== title) setTitle(next);
+    if (next !== task.title) {
+      updateTask(task.id, { title: next });
+      toast.success("Changes saved");
+    }
+  };
+
+  const saveDesc = () => {
+    if (!task) return;
+    if (desc !== task.description) {
+      updateTask(task.id, { description: desc });
+      toast.success("Changes saved");
+    }
+  };
 
   if (!task && !hydrated) {
     return (
@@ -127,21 +147,32 @@ export default function TaskDetailPage() {
           <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_308px]">
             {/* Main */}
             <div className="order-2 min-w-0 lg:order-1">
-              <input
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                onBlur={() => updateTask(task.id, { title: title.trim() || "Untitled Task" })}
-                className="w-full bg-transparent text-2xl font-semibold tracking-tight outline-none"
-                placeholder="Task title"
-              />
-              <textarea
-                value={desc}
-                onChange={(e) => setDesc(e.target.value)}
-                onBlur={() => updateTask(task.id, { description: desc })}
-                rows={2}
-                placeholder="Add a description..."
-                className="mt-2 w-full resize-none bg-transparent text-[14px] leading-relaxed text-muted outline-none placeholder:text-faint"
-              />
+              {/* Editable title — hover highlight + pencil signal it's editable */}
+              <div className="group relative -mx-2.5">
+                <input
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  onBlur={saveTitle}
+                  className="w-full rounded-lg bg-transparent px-2.5 py-1.5 pr-9 text-2xl font-semibold tracking-tight outline-none transition-colors hover:bg-hover focus:bg-surface-2 focus:ring-2 focus:ring-[var(--accent-ring)]"
+                  placeholder="Task title"
+                  aria-label="Task title (click to edit)"
+                />
+                <Pencil className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-0" />
+              </div>
+
+              {/* Editable description */}
+              <div className="group relative -mx-2.5 mt-1">
+                <textarea
+                  value={desc}
+                  onChange={(e) => setDesc(e.target.value)}
+                  onBlur={saveDesc}
+                  rows={2}
+                  placeholder="Add a description…"
+                  aria-label="Task description (click to edit)"
+                  className="w-full resize-none rounded-lg bg-transparent px-2.5 py-1.5 pr-9 text-[14px] leading-relaxed text-muted outline-none transition-colors placeholder:text-faint hover:bg-hover focus:bg-surface-2 focus:text-text focus:ring-2 focus:ring-[var(--accent-ring)]"
+                />
+                <Pencil className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-faint opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-0" />
+              </div>
 
               {/* Properties */}
               <div className="mt-4 space-y-2.5">
