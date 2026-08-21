@@ -1,0 +1,20 @@
+# dependencies
+/node_modules
+
+# build output
+/dist
+
+# environment
+.env
+.env.local
+
+# SQLite database files (regenerated via `prisma migrate` + `prisma db seed`)
+*.db
+*.db-journal
+prisma/*.db
+prisma/*.db-journal
+
+# logs & misc
+*.log
+.DS_Store
+coverage
