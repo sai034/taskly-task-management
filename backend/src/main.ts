@@ -18,11 +18,29 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
-  const origins = (process.env.CORS_ORIGINS ?? 'http://localhost:3000')
+  const configured = (process.env.CORS_ORIGINS ?? 'http://localhost:3000')
     .split(',')
     .map((o) => o.trim())
     .filter(Boolean);
-  app.enableCors({ origin: origins, credentials: true });
+  const allowAll = configured.includes('*');
+  app.enableCors({
+    // Allow: non-browser requests, explicitly configured origins, and any
+    // *.vercel.app deployment (production + preview URLs).
+    origin: (origin, cb) => {
+      if (!origin || allowAll || configured.includes(origin)) {
+        return cb(null, true);
+      }
+      try {
+        if (/(^|\.)vercel\.app$/.test(new URL(origin).hostname)) {
+          return cb(null, true);
+        }
+      } catch {
+        /* invalid origin */
+      }
+      return cb(null, false);
+    },
+    credentials: true,
+  });
 
   app.useGlobalPipes(
     new ValidationPipe({
