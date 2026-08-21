@@ -2,6 +2,7 @@
 
 import { Topbar } from "@/components/layout/Topbar";
 import { ListView } from "@/components/tasks/ListView";
+import { ListSkeleton } from "@/components/skeletons";
 import { Button } from "@/components/ui/Button";
 import { useTaskStore } from "@/lib/store";
 import Link from "next/link";
@@ -13,11 +14,23 @@ export default function ProjectDetailPage() {
   const router = useRouter();
   const project = useTaskStore((s) => s.projects.find((p) => p.id === id));
   const tasks = useTaskStore((s) => s.tasks);
+  const hydrated = useTaskStore((s) => s.hydrated);
 
   const projectTasks = useMemo(
     () => tasks.filter((t) => t.projectId === id),
     [tasks, id],
   );
+
+  if (!project && !hydrated) {
+    return (
+      <>
+        <Topbar title="Project" />
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <ListSkeleton />
+        </div>
+      </>
+    );
+  }
 
   if (!project) {
     return (

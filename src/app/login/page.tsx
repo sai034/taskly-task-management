@@ -1,8 +1,9 @@
 "use client";
 
 import { Button } from "@/components/ui/Button";
+import { Spinner } from "@/components/ui/Skeleton";
 import { useAuth } from "@/lib/auth";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 function GoogleIcon() {
@@ -31,10 +32,29 @@ function GoogleIcon() {
 export default function LoginPage() {
   const { user, ready, loginAsGuest, loginWithGoogle } = useAuth();
   const router = useRouter();
+  const [loading, setLoading] = useState<null | "guest" | "google">(null);
 
   useEffect(() => {
     if (ready && user) router.replace("/tasks");
   }, [ready, user, router]);
+
+  const handleGuest = async () => {
+    setLoading("guest");
+    try {
+      await loginAsGuest();
+    } finally {
+      setLoading(null);
+    }
+  };
+
+  const handleGoogle = async () => {
+    setLoading("google");
+    try {
+      await loginWithGoogle();
+    } finally {
+      setLoading(null);
+    }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-app px-4">
@@ -61,17 +81,25 @@ export default function LoginPage() {
             <Button
               variant="solid"
               className="h-11 w-full text-sm"
-              onClick={loginAsGuest}
+              onClick={handleGuest}
+              disabled={loading !== null}
             >
-              Continue as Guest
+              {loading === "guest" ? <Spinner /> : "Continue as Guest"}
             </Button>
             <Button
               variant="outline"
               className="h-11 w-full gap-2.5 text-sm"
-              onClick={loginWithGoogle}
+              onClick={handleGoogle}
+              disabled={loading !== null}
             >
-              <GoogleIcon />
-              Login with Google
+              {loading === "google" ? (
+                <Spinner />
+              ) : (
+                <>
+                  <GoogleIcon />
+                  Login with Google
+                </>
+              )}
             </Button>
           </div>
         </div>

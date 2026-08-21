@@ -5,6 +5,7 @@ import { Comments } from "@/components/tasks/Comments";
 import { SubtaskTable } from "@/components/tasks/SubtaskTable";
 import { TaskDetailPanel } from "@/components/tasks/TaskDetailPanel";
 import { UpdatesFeed } from "@/components/tasks/UpdatesFeed";
+import { TaskDetailSkeleton } from "@/components/skeletons";
 import { LabelPicker } from "@/components/pickers/LabelPicker";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
@@ -34,6 +35,7 @@ export default function TaskDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const task = useTaskStore((s) => s.tasks.find((t) => t.id === id));
+  const hydrated = useTaskStore((s) => s.hydrated);
   const { updateTask, deleteTask } = useTaskStore();
 
   const [title, setTitle] = useState("");
@@ -45,6 +47,17 @@ export default function TaskDetailPage() {
       setDesc(task.description);
     }
   }, [task?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!task && !hydrated) {
+    return (
+      <>
+        <Topbar title="Task" />
+        <div className="min-h-0 flex-1 overflow-y-auto bg-surface">
+          <TaskDetailSkeleton />
+        </div>
+      </>
+    );
+  }
 
   if (!task) {
     return (

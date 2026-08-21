@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { create } from "zustand";
 import { api } from "./api";
 import { SEED_PROJECTS, SEED_TASKS } from "./seed";
@@ -45,6 +46,7 @@ export const useTaskStore = create<TaskState>()((set, get) => {
   const persist = (p: Promise<unknown>) => {
     p.catch((e) => {
       console.error("Persist failed, re-syncing:", e);
+      toast.error("Couldn't save changes — re-syncing", { id: "persist-error" });
       void get().hydrate();
     });
   };
@@ -69,6 +71,9 @@ export const useTaskStore = create<TaskState>()((set, get) => {
       } catch (e) {
         // Backend unreachable — fall back to local seed so the UI still works.
         console.warn("API unreachable, using local seed data.", e);
+        toast.error("Can't reach the server — showing local data", {
+          id: "offline",
+        });
         set({
           tasks: SEED_TASKS,
           projects: SEED_PROJECTS,
@@ -95,9 +100,11 @@ export const useTaskStore = create<TaskState>()((set, get) => {
       try {
         const task = await api.createTask(payload);
         set((s) => ({ tasks: [...s.tasks, task] }));
+        toast.success("Task created");
         return task;
       } catch (e) {
         console.error("createTask failed, adding locally:", e);
+        toast.error("Server offline — task added locally", { id: "offline" });
         const task: Task = {
           id: uid("t"),
           title: payload.title!,
@@ -133,6 +140,7 @@ export const useTaskStore = create<TaskState>()((set, get) => {
     deleteTask: (id) => {
       set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) }));
       persist(api.deleteTask(id));
+      toast.success("Task deleted");
     },
 
     reorderWithin: (group, orderedIds) => {
@@ -265,13 +273,15 @@ export const useTaskStore = create<TaskState>()((set, get) => {
       }));
       api
         .createProject({ name })
-        .then((server) =>
+        .then((server) => {
           set((s) => ({
             projects: s.projects.map((p) => (p.id === tempId ? server : p)),
-          })),
-        )
+          }));
+          toast.success("Project created");
+        })
         .catch((e) => {
           console.error(e);
+          toast.error("Couldn't create project — re-syncing", { id: "persist-error" });
           void get().hydrate();
         });
     },
@@ -286,6 +296,7 @@ export const useTaskStore = create<TaskState>()((set, get) => {
     deleteProject: (id) => {
       set((s) => ({ projects: s.projects.filter((p) => p.id !== id) }));
       persist(api.deleteProject(id));
+      toast.success("Project deleted");
     },
 
     reset: () => void get().hydrate(),

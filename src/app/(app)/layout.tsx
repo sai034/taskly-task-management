@@ -22,7 +22,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     if (ready && user && !hydrated) void hydrate();
   }, [ready, user, hydrated, hydrate]);
 
-  if (!ready || !user || !hydrated) {
+  // Gate only on auth; the shell renders immediately and each page shows its
+  // own skeleton while the store hydrates from the API.
+  if (!ready || !user) {
     return (
       <div className="grid min-h-screen place-items-center">
         <div className="h-6 w-6 animate-spin rounded-full border-2 border-border-strong border-t-accent" />

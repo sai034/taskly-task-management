@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { ThemedToaster } from "@/components/ui/ThemedToaster";
 import { AuthProvider } from "@/lib/auth";
 import { ThemeProvider, themeScript } from "@/lib/theme";
 
@@ -29,6 +30,7 @@ export default function RootLayout({
       <body>
         <ThemeProvider>
           <AuthProvider>{children}</AuthProvider>
+          <ThemedToaster />
         </ThemeProvider>
       </body>
     </html>

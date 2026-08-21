@@ -6,6 +6,7 @@ import { MemberPicker } from "@/components/pickers/MemberPicker";
 import { PriorityPicker } from "@/components/pickers/PriorityPicker";
 import { FilterMenu } from "@/components/tasks/FilterMenu";
 import { PageToolbar } from "@/components/tasks/PageToolbar";
+import { ProjectsSkeleton } from "@/components/skeletons";
 import { AvatarGroup } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import {
@@ -25,6 +26,7 @@ import { useMemo, useState } from "react";
 export default function ProjectsPage() {
   const router = useRouter();
   const { projects, updateProject, deleteProject, addProject } = useTaskStore();
+  const hydrated = useTaskStore((s) => s.hydrated);
   const { priorityFilter } = useUiStore();
   const [query, setQuery] = useState("");
 
@@ -59,6 +61,11 @@ export default function ProjectsPage() {
         }
       />
 
+      {!hydrated ? (
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <ProjectsSkeleton />
+        </div>
+      ) : (
       <div className="min-h-0 flex-1 overflow-y-auto px-3 py-4 sm:px-4">
         <div className="overflow-hidden rounded-xl border border-border-default bg-surface">
           {/* Header */}
@@ -154,6 +161,7 @@ export default function ProjectsPage() {
           </button>
         </div>
       </div>
+      )}
     </>
   );
 }

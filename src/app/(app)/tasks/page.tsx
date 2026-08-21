@@ -6,6 +6,7 @@ import { FieldsMenu } from "@/components/tasks/FieldsMenu";
 import { FilterMenu } from "@/components/tasks/FilterMenu";
 import { ListView } from "@/components/tasks/ListView";
 import { PageToolbar } from "@/components/tasks/PageToolbar";
+import { BoardSkeleton, ListSkeleton } from "@/components/skeletons";
 import { Button } from "@/components/ui/Button";
 import { useTaskStore } from "@/lib/store";
 import { useUiStore } from "@/lib/ui-store";
@@ -17,6 +18,7 @@ export default function TasksPage() {
   const router = useRouter();
   const tasks = useTaskStore((s) => s.tasks);
   const addTask = useTaskStore((s) => s.addTask);
+  const hydrated = useTaskStore((s) => s.hydrated);
   const { view, priorityFilter } = useUiStore();
   const [query, setQuery] = useState("");
 
@@ -49,7 +51,13 @@ export default function TasksPage() {
         }
       />
       <div className="min-h-0 flex-1 overflow-y-auto">
-        {view === "board" ? (
+        {!hydrated ? (
+          view === "board" ? (
+            <BoardSkeleton />
+          ) : (
+            <ListSkeleton />
+          )
+        ) : view === "board" ? (
           <BoardView tasks={filtered} />
         ) : (
           <ListView tasks={filtered} />
