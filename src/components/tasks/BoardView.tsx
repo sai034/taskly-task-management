@@ -20,6 +20,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { TaskCard } from "./TaskCard";
 
@@ -84,7 +85,13 @@ function Column({
 
 export function BoardView({ tasks }: { tasks: Task[] }) {
   const { updateTask, addTask } = useTaskStore();
+  const router = useRouter();
   const [activeId, setActiveId] = useState<string | null>(null);
+
+  const handleAdd = async (group: GroupKey) => {
+    const t = await addTask(group);
+    router.push(`/tasks/${t.id}`);
+  };
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -153,7 +160,7 @@ export function BoardView({ tasks }: { tasks: Task[] }) {
             key={g.key}
             group={g.key}
             tasks={byGroup(g.key)}
-            onAdd={(grp) => addTask(grp)}
+            onAdd={handleAdd}
           />
         ))}
       </div>

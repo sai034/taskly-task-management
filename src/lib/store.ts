@@ -37,7 +37,7 @@ interface TaskState {
   addComment: (taskId: string, authorId: string, body: string) => void;
   logActivity: (taskId: string, entry: Omit<Activity, "id" | "createdAt">) => void;
 
-  addProject: (name: string) => void;
+  addProject: (name: string) => Promise<Project>;
   updateProject: (id: string, patch: Partial<Project>) => void;
   deleteProject: (id: string) => void;
 
@@ -285,33 +285,26 @@ export const useTaskStore = create<TaskState>()((set, get) => {
         });
     },
 
-    addProject: (name) => {
-      const tempId = uid("p");
-      set((s) => ({
-        projects: [
-          ...s.projects,
-          {
-            id: tempId,
-            name,
-            priority: "none" as Priority,
-            leadId: null,
-            dueDate: null,
-            order: s.projects.length,
-          },
-        ],
-      }));
-      tracked(api.createProject({ name }))
-        .then((server) => {
-          set((s) => ({
-            projects: s.projects.map((p) => (p.id === tempId ? server : p)),
-          }));
-          toast.success("Project created");
-        })
-        .catch((e) => {
-          console.error(e);
-          toast.error("Couldn't create project — re-syncing", { id: "persist-error" });
-          void get().hydrate();
-        });
+    addProject: async (name) => {
+      try {
+        const project = await tracked(api.createProject({ name }));
+        set((s) => ({ projects: [...s.projects, project] }));
+        toast.success("Project created");
+        return project;
+      } catch (e) {
+        console.error("createProject failed, adding locally:", e);
+        toast.error("Server offline — project added locally", { id: "offline" });
+        const project: Project = {
+          id: uid("p"),
+          name,
+          priority: "none",
+          leadId: null,
+          dueDate: null,
+          order: get().projects.length,
+        };
+        set((s) => ({ projects: [...s.projects, project] }));
+        return project;
+      }
     },
 
     updateProject: (id, patch) => {

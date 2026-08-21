@@ -140,7 +140,13 @@ function Group({
 }) {
   const [open, setOpen] = useState(true);
   const { addTask } = useTaskStore();
+  const router = useRouter();
   const meta = GROUPS.find((g) => g.key === group)!;
+
+  const handleAdd = async () => {
+    const t = await addTask(group);
+    router.push(`/tasks/${t.id}`);
+  };
 
   return (
     <div className="overflow-hidden rounded-xl border border-border-default bg-surface">
@@ -170,7 +176,7 @@ function Group({
             <Row key={t.id} task={t} />
           ))}
           <button
-            onClick={() => addTask(group)}
+            onClick={handleAdd}
             className="flex w-full items-center gap-1.5 border-t border-border-default px-3 py-2.5 text-[13px] text-faint hover:bg-hover hover:text-muted sm:px-4"
           >
             <Plus className="h-4 w-4" /> Add Task

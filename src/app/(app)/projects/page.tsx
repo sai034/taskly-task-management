@@ -30,6 +30,11 @@ export default function ProjectsPage() {
   const { priorityFilter } = useUiStore();
   const [query, setQuery] = useState("");
 
+  const handleAddProject = async () => {
+    const p = await addProject("New Project");
+    router.push(`/projects/${p.id}`);
+  };
+
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return projects
@@ -49,11 +54,7 @@ export default function ProjectsPage() {
             placeholder="Search projects..."
           >
             <FilterMenu />
-            <Button
-              variant="solid"
-              size="sm"
-              onClick={() => addProject("New Project")}
-            >
+            <Button variant="solid" size="sm" onClick={handleAddProject}>
               <Plus className="h-4 w-4" />
               <span className="hidden sm:inline">Add Project</span>
             </Button>
@@ -154,7 +155,7 @@ export default function ProjectsPage() {
           ))}
 
           <button
-            onClick={() => addProject("New Project")}
+            onClick={handleAddProject}
             className="flex w-full items-center gap-1.5 border-t border-border-default px-4 py-3 text-[13px] text-faint hover:bg-hover hover:text-muted"
           >
             <Plus className="h-4 w-4" /> Add Projects
