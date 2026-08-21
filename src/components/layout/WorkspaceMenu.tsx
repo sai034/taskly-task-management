@@ -62,7 +62,10 @@ export function WorkspaceMenu() {
         </button>
       </MenuTrigger>
 
-      <MenuContent align="start" className="w-[248px] max-w-[calc(100vw-1.5rem)]">
+      <MenuContent
+        align="start"
+        className="w-[var(--radix-dropdown-menu-trigger-width)] min-w-[210px] max-w-[calc(100vw-1.5rem)]"
+      >
         {/* Profile header */}
         <div className="flex flex-col items-center gap-1.5 px-2 py-3">
           <span
