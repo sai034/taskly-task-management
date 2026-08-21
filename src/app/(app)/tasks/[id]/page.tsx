@@ -184,7 +184,9 @@ export default function TaskDetailPage() {
                   placeholder="Task title"
                   aria-label="Task title (editable)"
                 />
-                <Pencil className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
+                <span className="pointer-events-none absolute right-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-md bg-surface-2 text-muted">
+                  <Pencil className="h-3.5 w-3.5" />
+                </span>
               </div>
 
               {/* Editable description */}
@@ -199,13 +201,15 @@ export default function TaskDetailPage() {
                   rows={2}
                   placeholder="Add a description…"
                   aria-label="Task description (editable)"
-                  className="w-full resize-none rounded-lg bg-transparent px-2.5 py-1.5 pr-9 text-[14px] leading-relaxed text-muted outline-none transition-colors placeholder:text-faint hover:bg-hover focus:bg-hover focus:text-text focus:ring-2 focus:ring-[var(--accent-ring)]"
+                  className="w-full resize-none rounded-lg bg-transparent px-2.5 py-1.5 pr-11 text-[14px] leading-relaxed text-muted outline-none transition-colors placeholder:text-faint hover:bg-hover focus:bg-hover focus:text-text focus:ring-2 focus:ring-[var(--accent-ring)]"
                 />
-                <Pencil className="pointer-events-none absolute right-3 top-3 h-4 w-4 text-faint" />
+                <span className="pointer-events-none absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-md bg-surface-2 text-muted">
+                  <Pencil className="h-3.5 w-3.5" />
+                </span>
               </div>
 
               {/* Auto-save status — tells the user edits save automatically */}
-              <div className="mt-1 flex h-4 items-center gap-1 px-0.5 text-[11px] text-faint">
+              <div className="mt-1.5 flex h-4 items-center gap-1.5 px-0.5 text-[11px] font-medium text-muted">
                 {saveStatus === "saving" ? (
                   <>
                     <span className="h-2.5 w-2.5 animate-spin rounded-full border-[1.5px] border-border-strong border-t-accent" />
@@ -217,7 +221,9 @@ export default function TaskDetailPage() {
                     Saved
                   </>
                 ) : (
-                  <>Changes save automatically</>
+                  <span className="text-faint">
+                    ✎ Edits save automatically as you type
+                  </span>
                 )}
               </div>
 
