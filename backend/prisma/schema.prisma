@@ -1,4 +1,4 @@
-// Taskly backend — Prisma schema (SQLite for zero-setup local dev).
+// Taskly backend — Prisma schema (PostgreSQL).
 // Enum-like fields are stored as validated strings; the small string arrays
 // (labels/teams/memberIds) are stored as JSON. Subtasks, comments and the
 // activity feed are proper related tables.
@@ -8,7 +8,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

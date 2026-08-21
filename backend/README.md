@@ -1,31 +1,32 @@
 # Taskly API
 
-The backend for Taskly — a REST API built with **NestJS**, **Prisma**, and **SQLite** (for
-zero-setup local development; the schema switches to PostgreSQL for production).
+The backend for Taskly — a REST API built with **NestJS**, **Prisma**, and **PostgreSQL**.
 
 ## Requirements
 
 - Node.js 18+
 - npm
+- A PostgreSQL database (a free one from [Render](https://render.com) or [Neon](https://neon.tech))
 
 ## Setup
 
 ```bash
 npm install
-npx prisma migrate dev      # create the SQLite database and tables
+# set DATABASE_URL in .env (see .env.example), then:
+npx prisma db push          # create the tables from the schema
 npm run db:seed             # seed members, projects, and tasks
 npm run start:dev           # start the API on http://localhost:4000/api
 ```
 
 ## Environment
 
-Copy `.env.example` to `.env` and adjust as needed:
+Copy `.env.example` to `.env` and set your values:
 
-| Variable        | Description                                       | Default                     |
-| --------------- | ------------------------------------------------- | --------------------------- |
-| `DATABASE_URL`  | Prisma connection string                          | `file:./dev.db`             |
-| `PORT`          | Port the API listens on                           | `4000`                      |
-| `CORS_ORIGINS`  | Comma-separated list of allowed frontend origins  | `http://localhost:3000`     |
+| Variable        | Description                                       | Example                                 |
+| --------------- | ------------------------------------------------- | --------------------------------------- |
+| `DATABASE_URL`  | PostgreSQL connection string                      | `postgresql://user:pass@host:5432/db`   |
+| `PORT`          | Port the API listens on                           | `4000`                                  |
+| `CORS_ORIGINS`  | Comma-separated list of allowed frontend origins  | `http://localhost:3000`                 |
 
 ## Project structure
 
@@ -80,13 +81,17 @@ resources return `404`.
 | `npm run start:dev`   | Start in watch mode                          |
 | `npm run build`       | Compile to `dist/`                           |
 | `npm run start:prod`  | Run the compiled build                       |
+| `npm run db:push`     | Sync the schema to the database              |
 | `npm run db:seed`     | Seed the database                            |
-| `npm run db:reset`    | Reset the database and re-run migrations     |
+| `npm run db:reset`    | Drop, re-sync the schema, and re-seed        |
 | `npm test`            | Run unit tests                               |
 | `npm run test:e2e`    | Run end-to-end tests                         |
 
-## Production database (PostgreSQL)
+## Deployment
 
-1. In `prisma/schema.prisma`, set `datasource db { provider = "postgresql" }`.
-2. Set `DATABASE_URL` to your PostgreSQL connection string and `CORS_ORIGINS` to the frontend URL.
-3. Run `npx prisma migrate deploy && npm run db:seed && npm run start:prod`.
+Set `DATABASE_URL` (PostgreSQL) and `CORS_ORIGINS` (the frontend URL) as environment variables.
+
+- **Build command:** `npm install && npx prisma generate && npm run build`
+- **Start command:** `npm run start:deploy` — runs `prisma db push` to sync the schema, then
+  starts the server. The database self-seeds on first boot when empty (idempotent), so existing
+  data is never overwritten on restarts.

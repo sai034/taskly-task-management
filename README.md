@@ -32,14 +32,14 @@ The frontend lives at the repo root; the backend is a self-contained app in `bac
 | Framework   | Next.js 16 (App Router) + React 19         | NestJS 11                            |
 | Language    | TypeScript (strict)                        | TypeScript                           |
 | Styling     | Tailwind CSS v4 (CSS-variable tokens)      | —                                    |
-| Data / ORM  | Zustand store → typed API client           | Prisma 6 + **SQLite** (dev)          |
+| Data / ORM  | Zustand store → typed API client           | Prisma 6 + **PostgreSQL**            |
 | Validation  | —                                          | class-validator / class-transformer  |
 | UI a11y     | Radix UI (dropdown, popover, dialog)       | —                                    |
 | Drag & drop | dnd-kit (Kanban)                           | —                                    |
 | Icons       | lucide-react                               | —                                    |
 
-> **Database choice.** SQLite is used for zero-setup local development. The schema switches to
-> PostgreSQL for production by changing one line — see [Deployment](#deployment).
+> **Database.** PostgreSQL via Prisma. Get a free database from Render or Neon and set
+> `DATABASE_URL` — see [Deployment](#deployment).
 
 ---
 
@@ -52,7 +52,8 @@ Two terminals. **Backend first** (the frontend reads from it):
 ```bash
 cd backend
 npm install
-npx prisma migrate dev      # creates the SQLite DB + tables
+# set DATABASE_URL in backend/.env (a free Postgres from Render or Neon), then:
+npx prisma db push          # creates the tables from the schema
 npm run db:seed             # seeds members, projects, tasks
 npm run start:dev           # API on http://localhost:4000/api
 ```
@@ -134,12 +135,11 @@ overflow at 320 / 768 / 1280+. Smooth animated search, optimistic updates, point
 
 ## Deployment
 
+- **Backend → Render (or Railway).** Deploy `backend/` and create a free **PostgreSQL** database.
+  - Build command: `npm install && npx prisma generate && npm run build`
+  - Start command: `npm run start:deploy` (runs `prisma db push`, then starts; self-seeds when empty)
+  - Env vars: `DATABASE_URL` (the Postgres URL) and `CORS_ORIGINS` (the frontend URL).
 - **Frontend → Vercel.** Import the repo, set `NEXT_PUBLIC_API_URL` to the deployed API URL.
-- **Backend → Railway / Render.** Deploy `backend/`. For a persistent production database, switch
-  Prisma to PostgreSQL:
-  1. In `backend/prisma/schema.prisma` set `datasource db { provider = "postgresql" }`.
-  2. Set `DATABASE_URL` to your Postgres connection string, and `CORS_ORIGINS` to the frontend URL.
-  3. `npx prisma migrate deploy && npm run db:seed && npm run start:prod`.
 
 ---
 
