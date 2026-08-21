@@ -21,7 +21,7 @@
     "db:seed": "prisma db seed",
     "db:reset": "prisma migrate reset --force",
     "prisma:generate": "prisma generate",
-    "start:deploy": "prisma migrate deploy && prisma db seed && node dist/main"
+    "start:deploy": "prisma migrate deploy && node dist/main"
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
