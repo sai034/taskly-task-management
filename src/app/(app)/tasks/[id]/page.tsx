@@ -208,25 +208,6 @@ export default function TaskDetailPage() {
                 </span>
               </div>
 
-              {/* Auto-save status — tells the user edits save automatically */}
-              <div className="mt-1.5 flex h-4 items-center gap-1.5 px-0.5 text-[11px] font-medium text-muted">
-                {saveStatus === "saving" ? (
-                  <>
-                    <span className="h-2.5 w-2.5 animate-spin rounded-full border-[1.5px] border-border-strong border-t-accent" />
-                    Saving…
-                  </>
-                ) : saveStatus === "saved" ? (
-                  <>
-                    <Check className="h-3 w-3 text-s-done" />
-                    Saved
-                  </>
-                ) : (
-                  <span className="text-faint">
-                    ✎ Edits save automatically as you type
-                  </span>
-                )}
-              </div>
-
               {/* Properties */}
               <div className="mt-4 space-y-2.5">
                 <div className="grid grid-cols-[92px_1fr] items-center gap-2">
@@ -264,6 +245,25 @@ export default function TaskDetailPage() {
                     <Tag className="h-3.5 w-3.5" /> Add document or link...
                   </button>
                 </div>
+              </div>
+
+              {/* Auto-save status — sits below Properties / Labels / Resources */}
+              <div className="mt-3 flex h-4 items-center gap-1.5 px-0.5 text-[11px] font-medium text-muted">
+                {saveStatus === "saving" ? (
+                  <>
+                    <span className="h-2.5 w-2.5 animate-spin rounded-full border-[1.5px] border-border-strong border-t-accent" />
+                    Saving…
+                  </>
+                ) : saveStatus === "saved" ? (
+                  <>
+                    <Check className="h-3 w-3 text-s-done" />
+                    Saved
+                  </>
+                ) : (
+                  <span className="text-faint">
+                    ✎ Edits save automatically as you type
+                  </span>
+                )}
               </div>
 
               {/* Subtasks */}
