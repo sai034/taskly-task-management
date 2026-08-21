@@ -243,6 +243,22 @@ body {
   color: var(--accent-soft-fg);
 }
 
+/* Tailwind v4 no longer sets a pointer cursor on interactive elements —
+   restore it for buttons, role="button", links and other clickables. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+[role="menuitem"],
+[role="tab"],
+summary,
+label[for],
+select:not(:disabled) {
+  cursor: pointer;
+}
+button:disabled,
+[aria-disabled="true"] {
+  cursor: not-allowed;
+}
+
 /* Thin, unobtrusive scrollbars */
 * {
   scrollbar-width: thin;
