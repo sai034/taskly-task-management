@@ -39,13 +39,13 @@ export default function TaskDetailPage() {
   const task = useTaskStore((s) => s.tasks.find((t) => t.id === id));
   const hydrated = useTaskStore((s) => s.hydrated);
   const { updateTask, deleteTask } = useTaskStore();
+  // Global save indicator — reflects every edit (title, priority, members, …).
+  const saveState = useTaskStore((s) => s.saveState);
+  const resetSaveState = useTaskStore((s) => s.resetSaveState);
 
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [dirty, setDirty] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved">(
-    "idle",
-  );
 
   // Load the fields when the task changes; reset the edit/save state.
   useEffect(() => {
@@ -53,7 +53,7 @@ export default function TaskDetailPage() {
       setTitle(task.title);
       setDesc(task.description);
       setDirty(false);
-      setSaveStatus("idle");
+      resetSaveState();
     }
   }, [task?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -64,11 +64,9 @@ export default function TaskDetailPage() {
     const titleChanged = nextTitle !== task.title;
     const descChanged = desc !== task.description;
     if (!titleChanged && !descChanged) return;
-    setSaveStatus("saving");
     const h = setTimeout(() => {
       if (titleChanged) updateTask(task.id, { title: nextTitle });
       if (descChanged) updateTask(task.id, { description: desc });
-      setSaveStatus("saved");
     }, 650);
     return () => clearTimeout(h);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -79,17 +77,11 @@ export default function TaskDetailPage() {
     if (!task) return;
     const next = title.trim() || "Untitled Task";
     if (next !== title) setTitle(next);
-    if (next !== task.title) {
-      updateTask(task.id, { title: next });
-      setSaveStatus("saved");
-    }
+    if (next !== task.title) updateTask(task.id, { title: next });
   };
   const flushDesc = () => {
     if (!task) return;
-    if (desc !== task.description) {
-      updateTask(task.id, { description: desc });
-      setSaveStatus("saved");
-    }
+    if (desc !== task.description) updateTask(task.id, { description: desc });
   };
 
   if (!task && !hydrated) {
@@ -249,12 +241,12 @@ export default function TaskDetailPage() {
 
               {/* Auto-save status — sits below Properties / Labels / Resources */}
               <div className="mt-3 flex h-4 items-center gap-1.5 px-0.5 text-[11px] font-medium text-muted">
-                {saveStatus === "saving" ? (
+                {saveState === "saving" ? (
                   <>
                     <span className="h-2.5 w-2.5 animate-spin rounded-full border-[1.5px] border-border-strong border-t-accent" />
                     Saving…
                   </>
-                ) : saveStatus === "saved" ? (
+                ) : saveState === "saved" ? (
                   <>
                     <Check className="h-3 w-3 text-s-done" />
                     Saved

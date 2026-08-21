@@ -19,6 +19,9 @@ interface TaskState {
   projects: Project[];
   hydrated: boolean;
   online: boolean;
+  /** Global persistence indicator for any edit (idle / saving / saved). */
+  saveState: "idle" | "saving" | "saved";
+  resetSaveState: () => void;
 
   hydrate: () => Promise<void>;
 
@@ -42,13 +45,31 @@ interface TaskState {
 }
 
 export const useTaskStore = create<TaskState>()((set, get) => {
-  /** Fire a persistence call; re-sync from the server if it fails. */
+  // Global save indicator: any in-flight mutation shows "saving", then "saved".
+  let pending = 0;
+  const startSave = () => {
+    pending++;
+    set({ saveState: "saving" });
+  };
+  const endSave = () => {
+    pending = Math.max(0, pending - 1);
+    if (pending === 0) set({ saveState: "saved" });
+  };
+
+  /** Fire a persistence call; track it, and re-sync from the server if it fails. */
   const persist = (p: Promise<unknown>) => {
+    startSave();
     p.catch((e) => {
       console.error("Persist failed, re-syncing:", e);
       toast.error("Couldn't save changes — re-syncing", { id: "persist-error" });
       void get().hydrate();
-    });
+    }).finally(endSave);
+  };
+
+  /** Track a persistence promise (returns the same promise). */
+  const tracked = <T>(p: Promise<T>) => {
+    startSave();
+    return p.finally(endSave);
   };
 
   /** Replace a task in local state with the authoritative server copy. */
@@ -60,6 +81,8 @@ export const useTaskStore = create<TaskState>()((set, get) => {
     projects: [],
     hydrated: false,
     online: true,
+    saveState: "idle",
+    resetSaveState: () => set({ saveState: "idle" }),
 
     hydrate: async () => {
       try {
@@ -98,7 +121,7 @@ export const useTaskStore = create<TaskState>()((set, get) => {
         projectId: partial?.projectId ?? null,
       };
       try {
-        const task = await api.createTask(payload);
+        const task = await tracked(api.createTask(payload));
         set((s) => ({ tasks: [...s.tasks, task] }));
         toast.success("Task created");
         return task;
@@ -174,10 +197,12 @@ export const useTaskStore = create<TaskState>()((set, get) => {
             : t,
         ),
       }));
-      api.addSubtask(taskId, { title }).then(replaceTask).catch((e) => {
-        console.error(e);
-        void get().hydrate();
-      });
+      tracked(api.addSubtask(taskId, { title }))
+        .then(replaceTask)
+        .catch((e) => {
+          console.error(e);
+          void get().hydrate();
+        });
     },
 
     updateSubtask: (taskId, subtaskId, patch) => {
@@ -226,10 +251,12 @@ export const useTaskStore = create<TaskState>()((set, get) => {
             : t,
         ),
       }));
-      api.addComment(taskId, { authorId, body }).then(replaceTask).catch((e) => {
-        console.error(e);
-        void get().hydrate();
-      });
+      tracked(api.addComment(taskId, { authorId, body }))
+        .then(replaceTask)
+        .catch((e) => {
+          console.error(e);
+          void get().hydrate();
+        });
     },
 
     logActivity: (taskId, entry) => {
@@ -250,10 +277,12 @@ export const useTaskStore = create<TaskState>()((set, get) => {
             : t,
         ),
       }));
-      api.addActivity(taskId, entry).then(replaceTask).catch((e) => {
-        console.error(e);
-        void get().hydrate();
-      });
+      tracked(api.addActivity(taskId, entry))
+        .then(replaceTask)
+        .catch((e) => {
+          console.error(e);
+          void get().hydrate();
+        });
     },
 
     addProject: (name) => {
@@ -271,8 +300,7 @@ export const useTaskStore = create<TaskState>()((set, get) => {
           },
         ],
       }));
-      api
-        .createProject({ name })
+      tracked(api.createProject({ name }))
         .then((server) => {
           set((s) => ({
             projects: s.projects.map((p) => (p.id === tempId ? server : p)),
