@@ -16,6 +16,7 @@ import { ACCENTS, useTheme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import {
   Check,
+  ChevronRight,
   ChevronsUpDown,
   LogOut,
   Moon,
@@ -44,9 +45,14 @@ export function WorkspaceMenu() {
   const { mode, setMode, accent, setAccent } = useTheme();
   const router = useRouter();
   const useFlyout = useHasSubmenuRoom();
+  // Which section is expanded in the small-screen accordion.
+  const [openSection, setOpenSection] = useState<"theme" | "color" | null>(null);
+
+  const rowClass =
+    "flex w-full items-center justify-between gap-2.5 rounded-lg px-2.5 py-1.5 text-[13px] text-text hover:bg-hover";
 
   return (
-    <Menu>
+    <Menu onOpenChange={(o) => !o && setOpenSection(null)}>
       <MenuTrigger asChild>
         <button className="group flex w-full items-center gap-2.5 rounded-lg border border-transparent px-2 py-1.5 text-left hover:bg-hover hover:border-border-default focus-accent">
           <span
@@ -83,7 +89,7 @@ export function WorkspaceMenu() {
 
         {useFlyout ? (
           <>
-            {/* Figma design — flyout submenus (medium & large screens) */}
+            {/* Medium & large — Figma flyout submenus */}
             <MenuSub>
               <MenuSubTrigger>
                 {mode === "dark" ? (
@@ -158,60 +164,99 @@ export function WorkspaceMenu() {
             </MenuSub>
           </>
         ) : (
-          <>
-            {/* Small screens — inline controls (flyouts would overflow) */}
-            <div className="px-2 py-1.5">
-              <div className="mb-1.5 px-0.5 text-[11px] font-medium uppercase tracking-wide text-faint">
-                Theme
-              </div>
-              <div className="grid grid-cols-2 gap-1 rounded-lg bg-surface-2 p-1">
+          <div className="px-1">
+            {/* Small — same items, but expand inline (accordion) so they fit */}
+            <button
+              onClick={() =>
+                setOpenSection((s) => (s === "theme" ? null : "theme"))
+              }
+              className={rowClass}
+            >
+              <span className="flex items-center gap-2.5">
+                {mode === "dark" ? (
+                  <Moon className="h-4 w-4 text-muted" />
+                ) : (
+                  <Sun className="h-4 w-4 text-muted" />
+                )}
+                Change Theme
+              </span>
+              <ChevronRight
+                className={cn(
+                  "h-4 w-4 text-faint transition-transform",
+                  openSection === "theme" && "rotate-90",
+                )}
+              />
+            </button>
+            {openSection === "theme" && (
+              <div className="mb-1 space-y-0.5">
                 {(["light", "dark"] as const).map((m) => (
                   <button
                     key={m}
                     onClick={() => setMode(m)}
-                    className={cn(
-                      "inline-flex items-center justify-center gap-1.5 rounded-md py-1.5 text-[13px] font-medium capitalize transition-colors",
-                      mode === m
-                        ? "bg-surface text-text shadow-sm"
-                        : "text-muted hover:text-text",
-                    )}
+                    className="flex w-full items-center justify-between rounded-lg py-1.5 pl-9 pr-2.5 text-[13px] hover:bg-hover"
                   >
-                    {m === "light" ? (
-                      <Sun className="h-3.5 w-3.5" />
-                    ) : (
-                      <Moon className="h-3.5 w-3.5" />
-                    )}
-                    {m}
+                    <span className="flex items-center gap-2.5 capitalize">
+                      {m === "light" ? (
+                        <Sun className="h-4 w-4 text-muted" />
+                      ) : (
+                        <Moon className="h-4 w-4 text-muted" />
+                      )}
+                      {m}
+                    </span>
+                    <Check
+                      className={cn(
+                        "h-4 w-4 text-accent",
+                        mode === m ? "opacity-100" : "opacity-0",
+                      )}
+                    />
                   </button>
                 ))}
               </div>
-            </div>
+            )}
 
-            <div className="px-2 pb-2 pt-1">
-              <div className="mb-1.5 px-0.5 text-[11px] font-medium uppercase tracking-wide text-faint">
+            <button
+              onClick={() =>
+                setOpenSection((s) => (s === "color" ? null : "color"))
+              }
+              className={rowClass}
+            >
+              <span className="flex items-center gap-2.5">
+                <Palette className="h-4 w-4 text-muted" />
                 Color Mode
-              </div>
-              <div className="flex items-center gap-2">
+              </span>
+              <ChevronRight
+                className={cn(
+                  "h-4 w-4 text-faint transition-transform",
+                  openSection === "color" && "rotate-90",
+                )}
+              />
+            </button>
+            {openSection === "color" && (
+              <div className="mb-1 space-y-0.5">
                 {ACCENTS.map((a) => (
                   <button
                     key={a.key}
                     onClick={() => setAccent(a.key)}
-                    title={a.label}
-                    aria-label={a.label}
-                    className={cn(
-                      "grid h-6 w-6 shrink-0 place-items-center rounded-full ring-2 ring-offset-2 ring-offset-surface transition-transform hover:scale-110",
-                      accent === a.key ? "ring-border-strong" : "ring-transparent",
-                    )}
-                    style={{ background: a.swatch }}
+                    className="flex w-full items-center justify-between rounded-lg py-1.5 pl-9 pr-2.5 text-[13px] hover:bg-hover"
                   >
-                    {accent === a.key && (
-                      <Check className="h-3.5 w-3.5 text-white" />
-                    )}
+                    <span className="flex items-center gap-2.5">
+                      <span
+                        className="h-3.5 w-3.5 rounded-[5px]"
+                        style={{ background: a.swatch }}
+                      />
+                      {a.label}
+                    </span>
+                    <Check
+                      className={cn(
+                        "h-4 w-4 text-accent",
+                        accent === a.key ? "opacity-100" : "opacity-0",
+                      )}
+                    />
                   </button>
                 ))}
               </div>
-            </div>
-          </>
+            )}
+          </div>
         )}
 
         <MenuItem onSelect={() => router.push("/profile")}>
