@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/Button";
 import { Spinner } from "@/components/ui/Skeleton";
 import { useAuth } from "@/lib/auth";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -106,13 +107,19 @@ export default function LoginPage() {
 
         <p className="mx-auto mt-5 max-w-[280px] text-center text-[12px] leading-relaxed text-faint">
           By clicking continue, you agree to our{" "}
-          <a className="text-muted underline underline-offset-2 hover:text-text">
+          <Link
+            href="/terms"
+            className="text-muted underline underline-offset-2 hover:text-text"
+          >
             Terms of Service
-          </a>{" "}
+          </Link>{" "}
           and{" "}
-          <a className="text-muted underline underline-offset-2 hover:text-text">
+          <Link
+            href="/privacy"
+            className="text-muted underline underline-offset-2 hover:text-text"
+          >
             Privacy Policy
-          </a>
+          </Link>
           .
         </p>
       </div>
