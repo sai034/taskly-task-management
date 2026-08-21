@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { api } from "./api";
 import { SEED_PROJECTS, SEED_TASKS } from "./seed";
 import type {
   Activity,
@@ -16,11 +16,14 @@ import { uid } from "./utils";
 interface TaskState {
   tasks: Task[];
   projects: Project[];
+  hydrated: boolean;
+  online: boolean;
 
-  addTask: (group: GroupKey, partial?: Partial<Task>) => Task;
+  hydrate: () => Promise<void>;
+
+  addTask: (group: GroupKey, partial?: Partial<Task>) => Promise<Task>;
   updateTask: (id: string, patch: Partial<Task>) => void;
   deleteTask: (id: string) => void;
-  moveTask: (id: string, group: GroupKey, order: number) => void;
   reorderWithin: (group: GroupKey, orderedIds: string[]) => void;
 
   addSubtask: (taskId: string, title: string) => void;
@@ -28,10 +31,7 @@ interface TaskState {
   deleteSubtask: (taskId: string, subtaskId: string) => void;
 
   addComment: (taskId: string, authorId: string, body: string) => void;
-  logActivity: (
-    taskId: string,
-    entry: Omit<Activity, "id" | "createdAt">,
-  ) => void;
+  logActivity: (taskId: string, entry: Omit<Activity, "id" | "createdAt">) => void;
 
   addProject: (name: string) => void;
   updateProject: (id: string, patch: Partial<Project>) => void;
@@ -40,178 +40,259 @@ interface TaskState {
   reset: () => void;
 }
 
-export const useTaskStore = create<TaskState>()(
-  persist(
-    (set, get) => ({
-      tasks: SEED_TASKS,
-      projects: SEED_PROJECTS,
+export const useTaskStore = create<TaskState>()((set, get) => {
+  /** Fire a persistence call; re-sync from the server if it fails. */
+  const persist = (p: Promise<unknown>) => {
+    p.catch((e) => {
+      console.error("Persist failed, re-syncing:", e);
+      void get().hydrate();
+    });
+  };
 
-      addTask: (group, partial) => {
-        const maxOrder = Math.max(
-          0,
-          ...get().tasks.filter((t) => t.group === group).map((t) => t.order),
-        );
+  /** Replace a task in local state with the authoritative server copy. */
+  const replaceTask = (server: Task) =>
+    set((s) => ({ tasks: s.tasks.map((t) => (t.id === server.id ? server : t)) }));
+
+  return {
+    tasks: [],
+    projects: [],
+    hydrated: false,
+    online: true,
+
+    hydrate: async () => {
+      try {
+        const [tasks, projects] = await Promise.all([
+          api.tasks(),
+          api.projects(),
+        ]);
+        set({ tasks, projects, hydrated: true, online: true });
+      } catch (e) {
+        // Backend unreachable — fall back to local seed so the UI still works.
+        console.warn("API unreachable, using local seed data.", e);
+        set({
+          tasks: SEED_TASKS,
+          projects: SEED_PROJECTS,
+          hydrated: true,
+          online: false,
+        });
+      }
+    },
+
+    addTask: async (group, partial) => {
+      const maxOrder = Math.max(
+        0,
+        ...get().tasks.filter((t) => t.group === group).map((t) => t.order),
+      );
+      const payload: Partial<Task> = {
+        title: partial?.title ?? "Untitled Task",
+        description: partial?.description ?? "",
+        group,
+        priority: partial?.priority ?? "none",
+        labels: partial?.labels ?? [],
+        memberIds: partial?.memberIds ?? [],
+        projectId: partial?.projectId ?? null,
+      };
+      try {
+        const task = await api.createTask(payload);
+        set((s) => ({ tasks: [...s.tasks, task] }));
+        return task;
+      } catch (e) {
+        console.error("createTask failed, adding locally:", e);
         const task: Task = {
           id: uid("t"),
-          title: partial?.title ?? "New Task",
-          description: partial?.description ?? "",
+          title: payload.title!,
+          description: "",
           group,
-          status: partial?.status ?? "todo",
-          priority: partial?.priority ?? "none",
-          labels: partial?.labels ?? [],
-          memberIds: partial?.memberIds ?? [],
-          reporterId: partial?.reporterId ?? "u-dexter",
-          dueDate: partial?.dueDate ?? null,
-          startDate: partial?.startDate ?? null,
-          teams: partial?.teams ?? [],
+          status: "todo",
+          priority: "none",
+          labels: [],
+          teams: [],
+          memberIds: [],
+          reporterId: "u-dexter",
+          dueDate: null,
+          startDate: null,
           subtasks: [],
           comments: [],
           activity: [],
-          projectId: partial?.projectId ?? null,
+          projectId: payload.projectId ?? null,
           order: maxOrder + 1,
           createdAt: new Date().toISOString(),
         };
         set((s) => ({ tasks: [...s.tasks, task] }));
         return task;
-      },
+      }
+    },
 
-      updateTask: (id, patch) =>
-        set((s) => ({
-          tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)),
-        })),
+    updateTask: (id, patch) => {
+      set((s) => ({
+        tasks: s.tasks.map((t) => (t.id === id ? { ...t, ...patch } : t)),
+      }));
+      persist(api.updateTask(id, patch));
+    },
 
-      deleteTask: (id) =>
-        set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) })),
+    deleteTask: (id) => {
+      set((s) => ({ tasks: s.tasks.filter((t) => t.id !== id) }));
+      persist(api.deleteTask(id));
+    },
 
-      moveTask: (id, group, order) =>
-        set((s) => ({
-          tasks: s.tasks.map((t) =>
-            t.id === id ? { ...t, group, order } : t,
-          ),
-        })),
+    reorderWithin: (group, orderedIds) => {
+      set((s) => ({
+        tasks: s.tasks.map((t) => {
+          const idx = orderedIds.indexOf(t.id);
+          return idx >= 0 && t.group === group ? { ...t, order: idx } : t;
+        }),
+      }));
+      orderedIds.forEach((id, i) => persist(api.updateTask(id, { order: i })));
+    },
 
-      reorderWithin: (group, orderedIds) =>
-        set((s) => ({
-          tasks: s.tasks.map((t) => {
-            const idx = orderedIds.indexOf(t.id);
-            return idx >= 0 && t.group === group ? { ...t, order: idx } : t;
-          }),
-        })),
+    addSubtask: (taskId, title) => {
+      set((s) => ({
+        tasks: s.tasks.map((t) =>
+          t.id === taskId
+            ? {
+                ...t,
+                subtasks: [
+                  ...t.subtasks,
+                  {
+                    id: uid("st"),
+                    title,
+                    priority: "none" as Priority,
+                    memberIds: [],
+                    dueDate: null,
+                    done: false,
+                  },
+                ],
+              }
+            : t,
+        ),
+      }));
+      api.addSubtask(taskId, { title }).then(replaceTask).catch((e) => {
+        console.error(e);
+        void get().hydrate();
+      });
+    },
 
-      addSubtask: (taskId, title) =>
-        set((s) => ({
-          tasks: s.tasks.map((t) =>
-            t.id === taskId
-              ? {
-                  ...t,
-                  subtasks: [
-                    ...t.subtasks,
-                    {
-                      id: uid("st"),
-                      title,
-                      priority: "none" as Priority,
-                      memberIds: [],
-                      dueDate: null,
-                      done: false,
-                    },
-                  ],
-                }
-              : t,
-          ),
-        })),
+    updateSubtask: (taskId, subtaskId, patch) => {
+      set((s) => ({
+        tasks: s.tasks.map((t) =>
+          t.id === taskId
+            ? {
+                ...t,
+                subtasks: t.subtasks.map((st) =>
+                  st.id === subtaskId ? { ...st, ...patch } : st,
+                ),
+              }
+            : t,
+        ),
+      }));
+      persist(api.updateSubtask(taskId, subtaskId, patch));
+    },
 
-      updateSubtask: (taskId, subtaskId, patch) =>
-        set((s) => ({
-          tasks: s.tasks.map((t) =>
-            t.id === taskId
-              ? {
-                  ...t,
-                  subtasks: t.subtasks.map((st) =>
-                    st.id === subtaskId ? { ...st, ...patch } : st,
-                  ),
-                }
-              : t,
-          ),
-        })),
+    deleteSubtask: (taskId, subtaskId) => {
+      set((s) => ({
+        tasks: s.tasks.map((t) =>
+          t.id === taskId
+            ? { ...t, subtasks: t.subtasks.filter((st) => st.id !== subtaskId) }
+            : t,
+        ),
+      }));
+      persist(api.deleteSubtask(taskId, subtaskId));
+    },
 
-      deleteSubtask: (taskId, subtaskId) =>
-        set((s) => ({
-          tasks: s.tasks.map((t) =>
-            t.id === taskId
-              ? { ...t, subtasks: t.subtasks.filter((st) => st.id !== subtaskId) }
-              : t,
-          ),
-        })),
+    addComment: (taskId, authorId, body) => {
+      set((s) => ({
+        tasks: s.tasks.map((t) =>
+          t.id === taskId
+            ? {
+                ...t,
+                comments: [
+                  ...t.comments,
+                  {
+                    id: uid("c"),
+                    authorId,
+                    body,
+                    createdAt: new Date().toISOString(),
+                  } satisfies Comment,
+                ],
+              }
+            : t,
+        ),
+      }));
+      api.addComment(taskId, { authorId, body }).then(replaceTask).catch((e) => {
+        console.error(e);
+        void get().hydrate();
+      });
+    },
 
-      addComment: (taskId, authorId, body) =>
-        set((s) => ({
-          tasks: s.tasks.map((t) =>
-            t.id === taskId
-              ? {
-                  ...t,
-                  comments: [
-                    ...t.comments,
-                    {
-                      id: uid("c"),
-                      authorId,
-                      body,
-                      createdAt: new Date().toISOString(),
-                    } satisfies Comment,
-                  ],
-                }
-              : t,
-          ),
-        })),
+    logActivity: (taskId, entry) => {
+      set((s) => ({
+        tasks: s.tasks.map((t) =>
+          t.id === taskId
+            ? {
+                ...t,
+                activity: [
+                  {
+                    id: uid("a"),
+                    createdAt: new Date().toISOString(),
+                    ...entry,
+                  } satisfies Activity,
+                  ...t.activity,
+                ],
+              }
+            : t,
+        ),
+      }));
+      api.addActivity(taskId, entry).then(replaceTask).catch((e) => {
+        console.error(e);
+        void get().hydrate();
+      });
+    },
 
-      logActivity: (taskId, entry) =>
-        set((s) => ({
-          tasks: s.tasks.map((t) =>
-            t.id === taskId
-              ? {
-                  ...t,
-                  activity: [
-                    {
-                      id: uid("a"),
-                      createdAt: new Date().toISOString(),
-                      ...entry,
-                    } satisfies Activity,
-                    ...t.activity,
-                  ],
-                }
-              : t,
-          ),
-        })),
+    addProject: (name) => {
+      const tempId = uid("p");
+      set((s) => ({
+        projects: [
+          ...s.projects,
+          {
+            id: tempId,
+            name,
+            priority: "none" as Priority,
+            leadId: null,
+            dueDate: null,
+            order: s.projects.length,
+          },
+        ],
+      }));
+      api
+        .createProject({ name })
+        .then((server) =>
+          set((s) => ({
+            projects: s.projects.map((p) => (p.id === tempId ? server : p)),
+          })),
+        )
+        .catch((e) => {
+          console.error(e);
+          void get().hydrate();
+        });
+    },
 
-      addProject: (name) =>
-        set((s) => ({
-          projects: [
-            ...s.projects,
-            {
-              id: uid("p"),
-              name,
-              priority: "none" as Priority,
-              leadId: null,
-              dueDate: null,
-              order: s.projects.length,
-            },
-          ],
-        })),
+    updateProject: (id, patch) => {
+      set((s) => ({
+        projects: s.projects.map((p) => (p.id === id ? { ...p, ...patch } : p)),
+      }));
+      persist(api.updateProject(id, patch));
+    },
 
-      updateProject: (id, patch) =>
-        set((s) => ({
-          projects: s.projects.map((p) => (p.id === id ? { ...p, ...patch } : p)),
-        })),
+    deleteProject: (id) => {
+      set((s) => ({ projects: s.projects.filter((p) => p.id !== id) }));
+      persist(api.deleteProject(id));
+    },
 
-      deleteProject: (id) =>
-        set((s) => ({ projects: s.projects.filter((p) => p.id !== id) })),
+    reset: () => void get().hydrate(),
+  };
+});
 
-      reset: () => set({ tasks: SEED_TASKS, projects: SEED_PROJECTS }),
-    }),
-    { name: "tm-data-v2" },
-  ),
-);
-
-/** Status helper kept out of the component layer. */
+/** Status implied by a board group, mirrors the backend. */
 export function statusForGroup(group: GroupKey): Status {
   switch (group) {
     case "todo":

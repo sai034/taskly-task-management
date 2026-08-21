@@ -29,8 +29,8 @@ export default function TasksPage() {
     });
   }, [tasks, query, priorityFilter]);
 
-  const handleAdd = () => {
-    const t = addTask("todo", { title: "Untitled Task" });
+  const handleAdd = async () => {
+    const t = await addTask("todo", { title: "Untitled Task" });
     router.push(`/tasks/${t.id}`);
   };
 

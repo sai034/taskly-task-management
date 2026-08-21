@@ -8,6 +8,7 @@ import {
   useEffect,
   useState,
 } from "react";
+import { api } from "./api";
 import { CURRENT_USER } from "./seed";
 
 export interface AuthUser {
@@ -29,12 +30,13 @@ const GUEST_USER: AuthUser = {
 };
 
 const KEY = "tm-auth";
+const TOKEN_KEY = "tm-token";
 
 interface AuthCtx {
   user: AuthUser | null;
   ready: boolean;
-  loginAsGuest: () => void;
-  loginWithGoogle: () => void;
+  loginAsGuest: () => void | Promise<void>;
+  loginWithGoogle: () => void | Promise<void>;
   updateUser: (patch: Partial<AuthUser>) => void;
   logout: () => void;
 }
@@ -62,14 +64,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     else localStorage.removeItem(KEY);
   }, []);
 
-  const loginAsGuest = useCallback(() => {
-    persist(GUEST_USER);
+  const loginAsGuest = useCallback(async () => {
+    try {
+      const { token, user } = await api.guest();
+      localStorage.setItem(TOKEN_KEY, token);
+      persist(user);
+    } catch {
+      // Backend unreachable — fall back to a local guest session.
+      persist(GUEST_USER);
+    }
     router.push("/tasks");
   }, [persist, router]);
 
-  const loginWithGoogle = useCallback(() => {
-    // Mock OAuth — in the NestJS phase this becomes a real redirect flow.
-    persist({ ...GUEST_USER, guest: false });
+  const loginWithGoogle = useCallback(async () => {
+    // Mock OAuth exchange handled by the NestJS /auth/google endpoint.
+    try {
+      const { token, user } = await api.google();
+      localStorage.setItem(TOKEN_KEY, token);
+      persist(user);
+    } catch {
+      persist({ ...GUEST_USER, guest: false });
+    }
     router.push("/tasks");
   }, [persist, router]);
 
@@ -86,6 +101,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   const logout = useCallback(() => {
+    localStorage.removeItem(TOKEN_KEY);
     persist(null);
     router.push("/login");
   }, [persist, router]);
